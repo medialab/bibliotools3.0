@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-""" 
+"""
    Author : Sebastian Grauwin (http://www.sebastian-grauwin.com/)
    Copyright (C) 2012
    All rights reserved.
@@ -10,7 +10,7 @@
 """
 
 # usage: prep_het_graph.py -i DIR -o DIR [-d INT] [-v]
-# 
+#
 
 import os
 import sys
@@ -23,10 +23,10 @@ import Utils
 ## ##################################################
 ## ##################################################
 ## ##################################################
-def prep_het_graph(in_dir,out_dir,dyn_window,verbose):
+def prep_het_graph(in_dir,out_dir,dyn_window,verbose,thresholds={}):
 
   ## INPUT DATA
-  src1  = os.path.join(in_dir, "articles.dat") 
+  src1  = os.path.join(in_dir, "articles.dat")
   src2  = os.path.join(in_dir, "authors.dat")
   src3  = os.path.join(in_dir, "keywords.dat")
   src4  = os.path.join(in_dir, "subjects.dat")
@@ -37,16 +37,17 @@ def prep_het_graph(in_dir,out_dir,dyn_window,verbose):
 
   ## CREATE HETEROGENEOUS TABLE
   if verbose: print "..create heterogeneous table"
- 
+
   het_table = dict();
   Y_table = dict();
   Ymin=2100;Ymax=1500
 
   pl = Utils.Article()
-  pl.read_file(src1)  
+  pl.read_file(src1)
   nb_art = len(pl.articles) # store the number of articles within database
+  if verbose: print "..parsing articles"
   for l in pl.articles:
-      if (l.year > 1900 and l.year < 2100): 
+      if (l.year > 1900 and l.year < 2050):
           Y_table[l.id] = l.year # store the publication year of each article
           if(l.year > Ymax): Ymax=l.year
           if(l.year < Ymin): Ymin=l.year
@@ -54,168 +55,178 @@ def prep_het_graph(in_dir,out_dir,dyn_window,verbose):
           else: het_table[('Y',l.year)] = [l.id]
           if ('J',l.journal) in het_table: het_table[('J',l.journal)].append( l.id )
           else: het_table[('J',l.journal)] = [l.id]
-
+  if verbose: print "..parsing authors"
   pl = Utils.Author()
-  pl.read_file(src2)  
+  pl.read_file(src2)
   for l in pl.authors:
-      if ('A',l.author) in het_table: 
+      if ('A',l.author) in het_table:
           if (l.id not in het_table[('A',l.author)]): het_table[('A',l.author)].append( l.id )
       else: het_table[('A',l.author)] = [l.id]
 
+  if verbose: print "..parsing Keywords"
   pl = Utils.Keyword()
-  pl.read_file(src3)  
+  pl.read_file(src3)
   for l in pl.keywords:
       # keywords
       if (l.ktype == 'IK'):
-          if ('K',l.keyword) in het_table: 
+          if ('K',l.keyword) in het_table:
               if (l.id not in het_table[('K',l.keyword)]): het_table[('K',l.keyword)].append( l.id )
           else: het_table[('K',l.keyword)] = [l.id]
       # title words
       if (l.ktype == 'TK'):
-          if ('TK',l.keyword) in het_table: 
+          if ('TK',l.keyword) in het_table:
               if (l.id not in het_table[('TK',l.keyword)]): het_table[('TK',l.keyword)].append( l.id )
           else: het_table[('TK',l.keyword)] = [l.id]
 
+  if verbose: print "..parsing Subjects"
   pl = Utils.Subject()
-  pl.read_file(src4)  
+  pl.read_file(src4)
   for l in pl.subjects:
-      if ('S',l.subject) in het_table: 
+      if ('S',l.subject) in het_table:
           if (l.id not in het_table[('S',l.subject)]): het_table[('S',l.subject)].append( l.id )
       else: het_table[('S',l.subject)] = [l.id]
-  
+
+  if verbose: print "..parsing References"
   pl = Utils.Ref()
-  pl.read_file(src5)  
+  pl.read_file(src5)
   for l in pl.refs:
-      foo = l.firstAU + ', ' + str(l.year) + ', ' + l.journal + ', ' + l.volume + ', ' + l.page 
+      foo = l.firstAU + ', ' + str(l.year) + ', ' + l.journal + ', ' + l.volume + ', ' + l.page
       if ('R',foo) in het_table: het_table[('R',foo)].append( l.id )
       else: het_table[('R',foo)] = [l.id]
       if ('RJ',l.journal) in het_table: het_table[('RJ',l.journal)].append( l.id )
       else: het_table[('RJ',l.journal)] = [l.id]
 
+  if verbose: print "..parsing Institution"
   pl = Utils.Institution()
-  pl.read_file(src7)  
+  pl.read_file(src7)
   for l in pl.institutions:
-      if ('I',l.institution) not in het_table: het_table[('I',l.institution)] = [] 
+      if ('I',l.institution) not in het_table: het_table[('I',l.institution)] = []
       if l.id not in het_table[('I',l.institution)]: het_table[('I',l.institution)].append( l.id )
 
+  if verbose: print "..parsing Country"
   pl = Utils.Country()
-  pl.read_file(src6)  
+  pl.read_file(src6)
   for l in pl.countries:
-      if ('C',l.country) not in het_table: het_table[('C',l.country)] = []; 
+      if ('C',l.country) not in het_table: het_table[('C',l.country)] = [];
       if l.id not in het_table[('C',l.country)]: het_table[('C',l.country)].append( l.id )
 
+  if verbose: print "..parsing Labo"
   pl = Utils.Labo()
-  pl.read_file(src8)  
+  pl.read_file(src8)
   for l in pl.labos:
-      if ('L',l.labo) not in het_table: het_table[('L',l.labo)] = []; 
+      if ('L',l.labo) not in het_table: het_table[('L',l.labo)] = [];
       if l.id not in het_table[('L',l.labo)]: het_table[('L',l.labo)].append( l.id )
 
-  ## DETERMINE THRESHOLDS 
-  ## ...initialize
-  Y_list = []; J_list = []; A_list = []; K_list = []; TK_list = []; S_list = []; R_list = []; RJ_list = []; I_list = []; C_list = []; L_list = [];
-  for (t,x) in het_table:
-      if(t == 'Y'): Y_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'J'): J_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'A'): A_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'K'): K_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'TK'): TK_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'S'): S_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'R'): R_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'RJ'): RJ_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'I'): I_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'C'): C_list.append( (x,len(het_table[(t,x)])) )
-      if(t == 'L'): L_list.append( (x,len(het_table[(t,x)])) )
+  threshold_confirmation=False
+  vA = thresholds.get("vA",15)
+  vK = thresholds.get("vK",5)
+  vS = thresholds.get("vS",10)
+  vR = thresholds.get("vR",7)
+  vTK = thresholds.get("vTK",11111111)
+  vY = thresholds.get("vY",111111111)
+  vC = thresholds.get("vC",10)
+  vJ = thresholds.get("vJ",10)
+  vI = thresholds.get("vI",15)
+  vRJ = thresholds.get("vRJ",111111111111)
 
-  xxY = []; yyY = []
-  for elm in Y_list:
-      xxY.append( elm[0] )
-      yyY.append( elm[1] )
-  xx = numpy.zeros(nb_art+1, dtype=numpy.ndarray)
-  for i in range(nb_art+1): xx[i]=i
-  xrj = numpy.zeros(len(R_list) + 1, dtype=numpy.ndarray)
-  for i in range(len(R_list)+1): xrj[i]=i
-  yyJ = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
-  for (x,v) in J_list: yyJ[v] += 1 
-  yyA = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
-  for (x,v) in A_list: yyA[v] += 1 
-  yyK = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
-  for (x,v) in K_list: yyK[v] += 1 
-  yyTK = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
-  for (x,v) in TK_list: yyTK[v] += 1 
-  yyS = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
-  for (x,v) in S_list: yyS[v] += 1 
-  yyR = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
-  for (x,v) in R_list: yyR[v] += 1 
-  yyRJ = numpy.zeros(len(R_list) + 1, dtype=numpy.ndarray)
-  for (x,v) in RJ_list: yyRJ[v] += 1 
-  yyI = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
-  for (x,v) in I_list: yyI[v] += 1  
-  yyC = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
-  for (x,v) in C_list: yyC[v] += 1   
-  yyL = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
-  for (x,v) in L_list: yyL[v] += 1  
+  if(threshold_confirmation):
+    ## DETERMINE THRESHOLDS
+    ## ...initialize
+    Y_list = []; J_list = []; A_list = []; K_list = []; TK_list = []; S_list = []; R_list = []; RJ_list = []; I_list = []; C_list = []; L_list = [];
+    for (t,x) in het_table:
+        if(t == 'Y'): Y_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'J'): J_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'A'): A_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'K'): K_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'TK'): TK_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'S'): S_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'R'): R_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'RJ'): RJ_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'I'): I_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'C'): C_list.append( (x,len(het_table[(t,x)])) )
+        if(t == 'L'): L_list.append( (x,len(het_table[(t,x)])) )
 
-  ## ... confirm
-#  vA = vY = vC = 5; vJ = vK = vTK = vS = vI = 10; vR = 20; vRJ = 50; 
-#  vA = 3; vK = vTK = vS = vR = 3; vY = vC = vJ = vI = 11111111111; vRJ = 111111111111;  #wltc
+    xxY = []; yyY = []
+    for elm in Y_list:
+        xxY.append( elm[0] )
+        yyY.append( elm[1] )
+    xx = numpy.zeros(nb_art+1, dtype=numpy.ndarray)
+    for i in range(nb_art+1): xx[i]=i
+    xrj = numpy.zeros(len(R_list) + 1, dtype=numpy.ndarray)
+    for i in range(len(R_list)+1): xrj[i]=i
+    yyJ = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
+    for (x,v) in J_list: yyJ[v] += 1
+    yyA = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
+    for (x,v) in A_list: yyA[v] += 1
+    yyK = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
+    for (x,v) in K_list: yyK[v] += 1
+    yyTK = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
+    for (x,v) in TK_list: yyTK[v] += 1
+    yyS = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
+    for (x,v) in S_list: yyS[v] += 1
+    yyR = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
+    for (x,v) in R_list: yyR[v] += 1
+    yyRJ = numpy.zeros(len(R_list) + 1, dtype=numpy.ndarray)
+    for (x,v) in RJ_list: yyRJ[v] += 1
+    yyI = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
+    for (x,v) in I_list: yyI[v] += 1
+    yyC = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
+    for (x,v) in C_list: yyC[v] += 1
+    yyL = numpy.zeros(nb_art + 1, dtype=numpy.ndarray)
+    for (x,v) in L_list: yyL[v] += 1
 
-#  vA = 15; vJ = 8 ; vK = 10; vTK = 20;  vS = 10; vC = 10; vI = 20; vR = 10; vY = vRJ = 111111111111; #ogm 1977_99
-#  vA = 15; vJ = 10 ; vK = 12; vS = 10; vC = 20; vI = 25; vR = 10; vTK = vY = vRJ = 111111111111; #ogm 1997_02
-#  vA = 20; vJ = 17 ; vK = 20; vS = 10; vI = 45; vC = 55; vR = 15; vTK = vY = vRJ = 111111111111; #ogm 2000_06
-#  vA = 20; vJ = 16 ; vK = 18; vS = 10; vI = 43; vC = 65; vR = 14; vTK = vY = vRJ = 111111111111; #ogm 2004_08
-#  vA = 20; vJ = 17 ; vK = 21; vS = 10; vI = 50; vC = 65; vR = 14; vTK = vY = vRJ = 111111111111; #ogm 2009_13
-
-#  vA = 15; vK = 7; vS = 3; vR = 10; vTK = vY = vC = vJ = vI = 11111111111; vRJ = 111111111111;  #wavelet 2007_10
-  vA = vK = vS = vR = vTK = 2; vY = vC = vJ = vI = 11111111111; vRJ = 111111111111;  #umr
-
-  confirm = 'n'
-  while confirm != 'y':
-      confirm_threshold(vA,vY,vC,vJ,vK,vTK,vS,vI,vR,vRJ,len(A_list),len(xxY),len(C_list),len(J_list),len(K_list),len(TK_list),len(S_list),len(I_list),len(R_list),len(RJ_list),yyA,yyY,yyC,yyJ,yyK,yyTK,yyS,yyI,yyR,yyRJ,nb_art)
-      confirm = raw_input("Confirm (y/n): ")
-      if confirm == 'n':
-          vA  = input("threshold for authors, used at least ? times:")
-          vY  = input("threshold for publication years, used at least ? times:")
-          vJ  = input("threshold for journals, used at least ? times:")
-          vK  = input("threshold for keywords, used at least ? times:")
-          vTK  = input("threshold for title words, used at least ? times:")
-          vS  = input("threshold for subjects, used at least ? times:")
-          vI  = input("threshold for institutions, used at least ? times:")
-          vC  = input("threshold for countries, used at least ? times:")
-          vR  = input("threshold for refs, used at least ? times:")
-          vRJ = input("threshold for refs journals, used at least ? times:")
+    ## ... confirm
+  #  vA = vY = vC = 5; vJ = vK = vTK = vS = vI = 10; vR = 20; vRJ = 50;
+  #  vA = 3; vK = vTK = vS = vR = 3; vY = vC = vJ = vI = 11111111111; vRJ = 111111111111;  #wltc
+    confirm = 'n'
+    while confirm != 'n':
+        confirm_threshold(vA,vY,vC,vJ,vK,vTK,vS,vI,vR,vRJ,len(A_list),len(xxY),len(C_list),len(J_list),len(K_list),len(TK_list),len(S_list),len(I_list),len(R_list),len(RJ_list),yyA,yyY,yyC,yyJ,yyK,yyTK,yyS,yyI,yyR,yyRJ,nb_art)
+        confirm = raw_input("Confirm (y/n): ")
+        if confirm == 'n':
+            vA  = input("threshold for authors, used at least ? times:")
+            vY  = input("threshold for publication years, used at least ? times:")
+            vJ  = input("threshold for journals, used at least ? times:")
+            vK  = input("threshold for keywords, used at least ? times:")
+            vTK  = input("threshold for title words, used at least ? times:")
+            vS  = input("threshold for subjects, used at least ? times:")
+            vI  = input("threshold for institutions, used at least ? times:")
+            vC  = input("threshold for countries, used at least ? times:")
+            vR  = input("threshold for refs, used at least ? times:")
+            vRJ = input("threshold for refs journals, used at least ? times:")
 
 
   ## ... selecting relevant data thanks to the thresholds
   het_table2 = dict()
   for (t,x) in het_table:
       l = len(het_table[(t,x)])
-      if (t == 'Y') and l >= vY: het_table2[(t,x)] = het_table[(t,x)] 
+      if (t == 'Y') and l >= vY: het_table2[(t,x)] = het_table[(t,x)]
       if (t == 'J') and l >= vJ: het_table2[(t,x)] = het_table[(t,x)]
-      if (t == 'A') and l >= vA: het_table2[(t,x)] = het_table[(t,x)] 
-      if (t == 'K') and l >= vK: het_table2[(t,x)] = het_table[(t,x)] 
-      if (t == 'TK') and l >= vTK: het_table2[(t,x)] = het_table[(t,x)] 
-      if (t == 'S') and l >= vS: het_table2[(t,x)] = het_table[(t,x)] 
+      if (t == 'A') and l >= vA: het_table2[(t,x)] = het_table[(t,x)]
+      if (t == 'K') and l >= vK: het_table2[(t,x)] = het_table[(t,x)]
+      if (t == 'TK') and l >= vTK: het_table2[(t,x)] = het_table[(t,x)]
+      if (t == 'S') and l >= vS: het_table2[(t,x)] = het_table[(t,x)]
       if (t == 'R') and l >= vR: het_table2[(t,x)] = het_table[(t,x)]
       if (t == 'RJ') and l >= vRJ: het_table2[(t,x)] = het_table[(t,x)]
       if (t == 'I') and l >= vI: het_table2[(t,x)] = het_table[(t,x)]
-      if (t == 'C') and l >= vC: het_table2[(t,x)] = het_table[(t,x)] 
-      if (t == 'L') and l >= 1: het_table2[(t,x)] = het_table[(t,x)] 
+      if (t == 'C') and l >= vC: het_table2[(t,x)] = het_table[(t,x)]
+      if (t == 'L') and l >= 1: het_table2[(t,x)] = het_table[(t,x)]
+  del(het_table)
   ##
-  confirm = 'n'; l_thr=1
-  while confirm != 'y':
+  confirm = 'n'; l_thr=thresholds.get("l_thr",1)
+  while confirm != 'n':
       print "We keep links between nodes co-used at least %d times" % (l_thr)
       confirm = raw_input("Confirm (y/n): ")
       if confirm == 'n':
           l_thr  = input("threshold for links -- nodes should be co-used at least ? times:")
 
-  ## PREP GEPHI STATIC HETEROGENEOUS NETWORK FILE 
+  ## PREP GEPHI STATIC HETEROGENEOUS NETWORK FILE
   if(dyn_window == 0):
       if verbose: print "\nPreparing the gdf file"
 
       ## ... ini
       dst = os.path.join(out_dir, "het_static.gdf")
       f_gephi = open(dst,'w')
- 
+
       ## ... prep nodes
       if verbose: print "Nodes..........."
 
@@ -227,38 +238,39 @@ def prep_het_graph(in_dir,out_dir,dyn_window,verbose):
       for (t,x) in het_table2:
           id_table[i] = (t,x)
           l = len(het_table2[(t,x)])
-          f_gephi.write("%d,'%s',%s,%f,%f,%d,'%s'\n" % (i, x, t, math.sqrt(l),math.sqrt(l),l, color_nodes[t]) )  
+          f_gephi.write("%d,'%s',%s,%f,%f,%d,'%s'\n" % (i, x, t, math.sqrt(l),math.sqrt(l),l, color_nodes[t]) )
           i += 1
       i_range = i
 
       ## ... prep edges
       if verbose: print "Edges..........."
 
-      e = len(het_table2) * len(het_table2) / 2; ee = 0; p=5 
-      f_gephi.write("edgedef>node1 VARCHAR,node2 VARCHAR,weight DOUBLE,nb_comm DOUBLE")
+      e = len(het_table2) * len(het_table2) / 2; ee = 0; p=5
+      f_gephi.write("edgedef>node1 VARCHAR,node2 VARCHAR,type VARCHAR,weight DOUBLE,nb_comm DOUBLE")
       if verbose: print "0%"
-      for i in range(i_range):
-          for j in range(i_range):
-              if(i < j):
-                  elm_i=id_table[i]; elm_j=id_table[j]
-                  ee += 1
-                  li=len(het_table2[elm_i]);lj=len(het_table2[elm_j])
-                  nb_comm=0 
-                  for u in het_table2[elm_i]:
-                      if u in het_table2[elm_j]: nb_comm += 1
-                  # PAUL : added edge type
-                  edge_type="_".join(sorted([id_table[i][0],id_table[j][0]]))
-                  # PAUL : added edge type
-                  if nb_comm >= l_thr : f_gephi.write("\n%d,%d,%s,%f,%d" % (i, j, edge_type, nb_comm/math.sqrt(li*lj), nb_comm) ) 
-                  #if nb_comm >= l_thr : f_gephi.write("\n%d,%d,%f,%d" % (i, j, nb_comm/math.sqrt(li*lj), nb_comm) ) 
-                  if (ee > (1.0 * e * p) / 100) and verbose: print "%d%%" % (p); p +=5
+
+      for i,elm_i in ((i,e_i) for (i,e_i) in id_table.iteritems() if e_i[0] =="R"):
+          for j,elm_j in ((j,e_j) for (j,e_j) in id_table.iteritems() if (j>i or (j<i and e_j[0]!="R")) ):
+
+                    edge_type="_".join(sorted([elm_i[0],elm_j[0]]))
+                  # if "R" in edge_type :
+
+                    li = len(het_table2[elm_i])
+                    lj = len(het_table2[elm_j])
+                    nb_comm = len(set(het_table2[elm_i]) & set(het_table2[elm_j]))
+
+                    if nb_comm >= l_thr:
+                        f_gephi.write("\n%d,%d,%s,%f,%d" % (i, j, edge_type, nb_comm/math.sqrt(li*lj), nb_comm) )
+
+                    ee += 1
+                    if verbose and (ee > (1.0 * e * p) / 100): print "%d%%" % (p); p +=5
       if verbose: print "100%"
 
       ## ... end
-      f_gephi.close() 
+      f_gephi.close()
 
 
-  ## PREP GEPHI DYNAMIC HETEROGENEOUS NETWORK FILE 
+  ## PREP GEPHI DYNAMIC HETEROGENEOUS NETWORK FILE
   if(dyn_window > 0):
       if verbose: print "\nPreparing the gexf file"
 
@@ -267,7 +279,7 @@ def prep_het_graph(in_dir,out_dir,dyn_window,verbose):
       f_gephi = open(dst,'w')
       f_gephi.write("<gexf xmlns=\"http://www.gexf.net/1.1draft\"\n       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n       xsi:schemaLocation=\"http://www.gexf.net/1.1draft\n                             http://www.gexf.net/1.1draft/gexf.xsd\"\n      version=\"1.1\">\n  <graph mode=\"dynamic\" defaultedgetype=\"undirected\" timeformat = \"date\" start=\"%d-01-01\" end=\"%d-12-31\">\n\t\t<attributes class=\"node\" mode=\"dynamic\">\n\t\t  <attribute id=\"type\" title=\"type\" type=\"STRING\"/>\n\t\t  <attribute id=\"times_used\" title=\"times_used\" type=\"FLOAT\"/>\n\t\t</attributes>\n\t\t<attributes class=\"edge\" mode=\"dynamic\">\n\t\t  <attribute id=\"weight\" title=\"weight\" type=\"FLOAT\"/>\n\t\t  <attribute id=\"NbComm\" title=\"NbComm\" type=\"FLOAT\"/>\n\t\t</attributes>\n\n" % (Ymin,Ymax))
 
- 
+
       ## ... prep nodes
       if verbose: print "Nodes..........."
       id_table = dict()
@@ -278,36 +290,36 @@ def prep_het_graph(in_dir,out_dir,dyn_window,verbose):
       for (t,x) in het_table2:
           id_table[i] = (t,x)
           w=str(x).replace('&','-')
-          foo = [] 
-          # place in list 'foo' some info about the node (t,x) 
+          foo = []
+          # place in list 'foo' some info about the node (t,x)
           y = Ymin
           while (y <= Ymax):
               l=0
               for u in het_table2[(t,x)]:
-                  if( Y_table[u] >= y and Y_table[u] < y + dyn_window): 
+                  if( Y_table[u] >= y and Y_table[u] < y + dyn_window):
                       l += 1
                       if (i,y) in het_table3: het_table3[(i,y)].append( u )
                       else: het_table3[(i,y)] = [u]
               if(l>0): foo.append( (y,l) )
-              y += dyn_window 
-          #end while 
+              y += dyn_window
+          #end while
           #translate the info within list 'foo' into gexf format
           f_gephi.write("\t<node id=\"%d\" label=\"%s\" >\n\t\t<attvalues>\n\t\t\t<attvalue for=\"type\" value=\"%s\"/>\n" % (i, w, t))
           for (y,l) in foo:
               f_gephi.write("\t\t\t<attvalue for=\"times_used\" value=\"%d\" start=\"%d-01-01\" end=\"%d-12-31\"/>\n" % (l, y, y + dyn_window -1))
           f_gephi.write("\t\t</attvalues>\n\t\t<spells>\n")
           for (y,l) in foo:
-              f_gephi.write("\t\t\t<spell start=\"%d-01-01\" end=\"%d-12-31\"/>\n" % (y, y + dyn_window -1) )  
-          f_gephi.write("\t\t</spells>\n\t</node>\n")  
+              f_gephi.write("\t\t\t<spell start=\"%d-01-01\" end=\"%d-12-31\"/>\n" % (y, y + dyn_window -1) )
+          f_gephi.write("\t\t</spells>\n\t</node>\n")
           i += 1
-      #end for    
+      #end for
       i_range = i
       f_gephi.write("\t</nodes>\n")
 
 
       ## ... prep edges
       if verbose: print "Edges..........."
-      e = i_range * i_range / 2; ee = 0; p=5 
+      e = i_range * i_range / 2; ee = 0; p=5
       f_gephi.write("\t<edges>\n")
       if verbose: print "0%"
       for i in range(i_range):
@@ -323,20 +335,20 @@ def prep_het_graph(in_dir,out_dir,dyn_window,verbose):
                       if(li * lj) > 0:
                           nb_comm=0
                           for u in het_table3[(i,y)]:
-                              if u in het_table3[(j,y)]: nb_comm += 1    
-                          if nb_comm >= l_thr: 
-                              if aux == 0: 
+                              if u in het_table3[(j,y)]: nb_comm += 1
+                          if nb_comm >= l_thr:
+                              if aux == 0:
                                   f_gephi.write("\t<edge source=\"%d\" target=\"%d\">\n\t\t<attvalues>\n" % (i,j))
                                   aux = 1
-                              foo.append( y )    
+                              foo.append( y )
                               f_gephi.write("\t\t\t<attvalue for=\"weight\" value=\"%f\" start=\"%d-01-01\" end=\"%d-12-31\"/>\n\t\t\t<attvalue for=\"NbComm\" value=\"%d\" start=\"%d-01-01\" end=\"%d-12-31\"/>\n" % ((1.0 * nb_comm)/math.sqrt(li*lj), y, y + dyn_window - 1, nb_comm, y, y + dyn_window - 1))
-                      y += dyn_window   
+                      y += dyn_window
                   #end while
-                  if aux == 1: 
-                      f_gephi.write("\t\t</attvalues>\n\t\t<spells>\n") 
+                  if aux == 1:
+                      f_gephi.write("\t\t</attvalues>\n\t\t<spells>\n")
                       for y in foo:
-                          f_gephi.write("\t\t\t<spell start=\"%d-01-01\" end=\"%d-12-31\"/>\n" % (y, y + dyn_window -1) )  
-                      f_gephi.write("\t\t</spells>\n\t</edge>\n")  
+                          f_gephi.write("\t\t\t<spell start=\"%d-01-01\" end=\"%d-12-31\"/>\n" % (y, y + dyn_window -1) )
+                      f_gephi.write("\t\t</spells>\n\t</edge>\n")
 
                   if (ee > (1.0 * e * p) / 100) and verbose: print "%d%%" % (p); p +=5
               #end edge
@@ -346,7 +358,7 @@ def prep_het_graph(in_dir,out_dir,dyn_window,verbose):
 
       ## ... end
       f_gephi.write("  </graph>\n</gexf>")
-      f_gephi.close() 
+      f_gephi.close()
 
 
   ## END
@@ -360,28 +372,28 @@ def confirm_threshold(vA,vY,vC,vJ,vK,vTK,vS,vI,vR,vRJ,lA,lY,lC,lJ,lK,lTK,lS,lI,l
 
   auxY = auxA = auxJ = auxK = auxTK = auxS = auxI = auxR = auxRJ = auxC = 0
 
-  for v in range(lY): 
+  for v in range(lY):
       if(yyY[v] >= vY): auxY += 1
   v = vA
   while v <= nb_art: auxA += yyA[v]; v += 1
-  v = vJ 
+  v = vJ
   while v <= nb_art: auxJ += yyJ[v]; v += 1
-  v = vK 
+  v = vK
   while v <= nb_art: auxK += yyK[v]; v += 1
-  v = vTK 
+  v = vTK
   while v <= nb_art: auxTK += yyTK[v]; v += 1
-  v = vS 
+  v = vS
   while v <= nb_art: auxS += yyS[v]; v += 1
-  v = vI 
+  v = vI
   while v <= nb_art: auxI += yyI[v]; v += 1
   v = vC
   while v <= nb_art: auxC += yyC[v]; v += 1
   v = vR
   while v <= nb_art: auxR += yyR[v]; v += 1
-  v = vRJ 
+  v = vRJ
   while v <= lR: auxRJ += yyRJ[v]; v += 1
 
-  
+
   print "\n THRESHOLDS proposed: keep items of each type used at least ...x... times (this ensures faster computing and lighter gexf output files. Keep in mind that additionnal filtering can also be performed later with GEPHI):\n Authors used in at least ...%d... articles\n ==> %d authors out of %d\n Publication Years used in at least ...%d... articles \n ==> %d PY out of %d\n Journals used in at least ...%d... articles \n ==> %d journals out of %d\n Keywords used in at least ...%d... articles \n ==> %d keywords out of %d\n Title words used in at least ...%d... articles \n ==> %d title words out of %d\n Subjects used in at least ...%d... articles \n ==> %d subjects out of %d\n Institutions used in at least ...%d... articles \n ==> %d institutions out of %d\n Countries used in at least ...%d... articles \n ==> %d countries out of %d\n Refs used in at least ...%d... articles \n ==> %d refs out of %d\n Refs Journals used in at least ...%d... references \n ==> %d RJ out of %d" % (vA,auxA,lA,vY,auxY,lY,vJ,auxJ,lJ,vK,auxK,lK,vTK,auxTK,lTK,vS,auxS,lS,vI,auxI,lI,vC,auxC,lC,vR,auxR,lR,vRJ,auxRJ,lRJ)
 
 ## ##################################################
@@ -396,13 +408,13 @@ def main():
 #   --version             show program's version number and exit
 #   -i DIR, --input_dir DIR input directory name
 #   -o DIR, --output_dir DIR input directory name
-#   -r 
+#   -r
   # Parse line options.
   # Try to have always the same input options
   parser = argparse.ArgumentParser(description = 'parser')
 
   parser.add_argument('--version', action='version', version='%(prog)s 1.1')
-  
+
   parser.add_argument("-i", "--input_dir", nargs=1, required=True,
           action = "store", dest="in_dir",
           help="input directory name",
@@ -417,7 +429,7 @@ def main():
           action = "store", dest="dyn_window",
           default = [0], help="dyn_window",
           metavar='INT')
-          
+
   parser.add_argument("-v", "--verbose",
           action = "store_true", dest="verbose",
           default = False,
@@ -425,7 +437,7 @@ def main():
 
   #Analysis of input parameters
   args = parser.parse_args()
-  
+
   if (not os.path.exists(args.in_dir[0])):
       print "Error: Input directory does not exist: ", args.in_dir[0]
       exit()
@@ -433,14 +445,14 @@ def main():
   if (not os.path.exists(args.out_dir[0])):
       print "Error: Output directory does not exist: ", args.out_dir[0]
       exit()
-  ##      
+  ##
 
   prep_het_graph(args.in_dir[0],args.out_dir[0],args.dyn_window[0],args.verbose)
 
   return
 
 
-    
+
 ## ##################################################
 ## ##################################################
 ## ##################################################

@@ -254,11 +254,13 @@ class Author:
                 if (line != ""):
                     s = line.split("\t")
                     aline = Author()
-		    if len(s)<3:
-			print lncnt,s
                     aline.id = int(s[0])
                     aline.rank = int(s[1])
-                    aline.author = s[2]
+                    if len(s)<3:
+                        print "missing author in : %s %s"%(lncnt,s)
+                        aline.author = "name missing"
+                    else:
+                        aline.author = s[2]
 		    #print int(s[0]), int(s[1]),s[2], 'author' 
                     alines_list.append( aline )
 		    lncnt+=1

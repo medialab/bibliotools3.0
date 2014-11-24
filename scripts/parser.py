@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-""" 
+"""
    Author : Sebastian Grauwin (http://www.sebastian-grauwin.com/)
    Copyright (C) 2012
    All rights reserved.
@@ -10,12 +10,11 @@
 """
 
 # usage: parser.py -i DIR -o DIR [-v]
-# 
+#
 
 import os
 import sys
 import glob
-import numpy
 import argparse
 import Utils
 
@@ -36,7 +35,7 @@ def Wos_parser(in_dir,out_dir,verbose):
   srccomp = "%s/*.txt" % in_dir
   srclst = glob.glob(srccomp)
   id = int(-1)
-  dst1  = os.path.join(out_dir, "articles.dat") 
+  dst1  = os.path.join(out_dir, "articles.dat")
   f_articles = open(dst1,'w')
   dst2  = os.path.join(out_dir, "authors.dat")
   f_authors = open(dst2,'w')
@@ -58,39 +57,40 @@ def Wos_parser(in_dir,out_dir,verbose):
 
   ## TREAT DATA
 
+  print len(srclst) + "... total articles"
   for src in srclst:
       pl = Utils.ArticleList()
       pl.read_file(src)
-      if verbose: 
+      if verbose:
           print "..processing %d articles in file %s" % (len(pl.articles), src)
       if (len(pl.articles) > 0):
           for article in pl.articles:
             if article.UT not in WOS_IDS:
               WOS_IDS[article.UT] = ''
               id = id + 1
-              #article 
+              #article
               foo = article.AU.split('; ')
               firstAU = foo[0].replace(',','')
               f_articles.write("%d\t%s\t%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (id,firstAU,article.PY,article.J9,article.VL,article.BP,article.DI,article.PT,article.DT,article.TC,article.TI,article.UT))
               #authors
-              if(article.AU != ""): 
+              if(article.AU != ""):
                   foo = article.AU.split('; ')
                   for i in range(len(foo)):
                       foo[i] = foo[i].replace(',','')
                       aux1 = foo[i].rfind(' ')
                       aux2 = len(foo[i])
                       foobar = foo[i].lower().capitalize()
-                      if aux1 > 0: 
+                      if aux1 > 0:
                           s1 = foobar[aux1:aux2]
-                          s2 = s1.upper() 
+                          s2 = s1.upper()
                           foobar = foobar.replace(s1,s2)
                       aux = foobar.find('-')
-                      if aux > 0: 
+                      if aux > 0:
                           bar1 = foobar[aux:aux+2]
                           bar2 = '-' + foobar[aux+1].upper()
                           foobar = foobar.replace(bar1,bar2)
                       aux = foobar.find(' ')
-                      if aux > 0: 
+                      if aux > 0:
                           bar1 = foobar[aux:aux+2]
                           bar2 = ' ' + foobar[aux+1].upper()
                           foobar = foobar.replace(bar1,bar2)
@@ -124,10 +124,10 @@ def Wos_parser(in_dir,out_dir,verbose):
                    for i in range(len(foo)):
                        ref=Utils.Ref()
                        ref.parse_ref(foo[i])
-                       kompt_refs += 1 
-                       if(ref.year > 0): 
+                       kompt_refs += 1
+                       if(ref.year > 0):
                            f_refs.write("%d\t%s\t%d\t%s\t%s\t%s\n" % (id,ref.firstAU,ref.year,ref.journal,ref.volume,ref.page))
-                       if(ref.year == 0): kompt_corrupt_refs += 1  
+                       if(ref.year == 0): kompt_corrupt_refs += 1
               #countries / institutions
               if(article.C1 != ""):
                   adresse = article.C1
@@ -141,7 +141,7 @@ def Wos_parser(in_dir,out_dir,verbose):
                   foo = adresse.split('; ')
                   for i in range(len(foo)):
                       foo[i] = foo[i].replace(', ',',')
-                      bar = foo[i].split(',') 
+                      bar = foo[i].split(',')
                       ll = len(bar)
                       for j in range(ll - 2):
                           f_institutions.write("%d\t%d\t%s\n" % (id,i,bar[j]))
@@ -172,7 +172,7 @@ def Wos_parser(in_dir,out_dir,verbose):
 
 def main():
 # usage: parser.py [-h] [--version] -i DIR -o DIR [-v]
-# 
+#
 # optional arguments:
 #   -h, --help            show this help message and exit
 #   --version             show program's version number and exit
@@ -185,12 +185,12 @@ def main():
   parser = argparse.ArgumentParser(description = 'parser')
 
   parser.add_argument('--version', action='version', version='%(prog)s 1.1')
-  
+
   parser.add_argument("-i", "--input_dir", nargs=1, required=True,
           action = "store", dest="in_dir",
           help="input directory name",
           metavar='DIR')
-          
+
   parser.add_argument("-o", "--output_dir", nargs=1, required=True,
           action = "store", dest="out_dir",
           help="output directory name",
@@ -203,7 +203,7 @@ def main():
 
   #Analysis of input parameters
   args = parser.parse_args()
-  
+
   if (not os.path.exists(args.in_dir[0])):
       print "Error: Input directory does not exist: ", args.in_dir[0]
       exit()
@@ -212,14 +212,14 @@ def main():
       print "Error: Output directory does not exist: ", args.out_dir[0]
       exit()
 
-  ##      
+  ##
 
   Wos_parser(args.in_dir[0],args.out_dir[0],args.verbose)
 
   return
 
 
-    
+
 ## ##################################################
 ## ##################################################
 ## ##################################################
