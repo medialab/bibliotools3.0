@@ -57,7 +57,6 @@ def Wos_parser(in_dir,out_dir,verbose):
 
   ## TREAT DATA
 
-  print len(srclst) + "... total articles"
   for src in srclst:
       pl = Utils.ArticleList()
       pl.read_file(src)

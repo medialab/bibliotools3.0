@@ -35,10 +35,10 @@ def process_wos(subfolder):
 os.mkdir(outdir_prefix)
 subfolders=os.listdir(indir)
 
-#pool = Pool(processes=2)
+pool = Pool(processes=2)
 
 for subfolder in sorted(subfolders):
 	print subfolder
- 	process_wos(os.path.join(indir,subfolder),)
-#pool.close()
-#pool.join()
+ 	pool.apply_async(process_wos,(os.path.join(indir,subfolder),))
+pool.close()
+pool.join()
