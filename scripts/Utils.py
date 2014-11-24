@@ -88,7 +88,7 @@ class Wosline:
             self.TI = s[defCols['TI']] ## Document Title
             self.SO = s[defCols['SO']] ## Publication Name
             self.DT = s[defCols['DT']] ## Document Type
-            self.DE = s[defCols['PT']] ## Author Keywords
+            self.DE = s[defCols['DE']] ## Author Keywords
             self.ID = s[defCols['ID']] ## Keywords Plus
             self.C1 = s[defCols['C1']] ## Author Address
             self.CR = s[defCols['CR']] ## Cited References
@@ -248,15 +248,20 @@ class Author:
             else:
                 fd = sys.stdin
             # read
+	    lncnt=0
             for line in fd.readlines():
                 line = line.strip() # removes \n
                 if (line != ""):
                     s = line.split("\t")
                     aline = Author()
+		    if len(s)<3:
+			print lncnt,s
                     aline.id = int(s[0])
                     aline.rank = int(s[1])
-                    aline.author = s[2]  
+                    aline.author = s[2]
+		    #print int(s[0]), int(s[1]),s[2], 'author' 
                     alines_list.append( aline )
+		    lncnt+=1
             # close  
             if filename != 'stdin':
                 fd.close()

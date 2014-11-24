@@ -5,6 +5,8 @@
    Copyright (C) 2012
    All rights reserved.
    BSD license.
+   .... If you are using these scripts, please cite our "Scientometrics" paper:
+   .... S Grauwin, P Jensen, Mapping Scientific Institutions. Scientometrics 89(3), 943-954 (2011)
 """
 
 # usage: parser.py -i DIR -o DIR [-v]
@@ -18,8 +20,14 @@ import argparse
 import Utils
 
 ## ##################################################
+common_words = ['a', 'able', 'about', 'across', 'after', 'all', 'almost', 'also', 'am', 'among', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'but', 'by', 'can', 'cannot', 'could', 'dear', 'did', 'do', 'does', 'either', 'else', 'ever', 'every', 'for', 'from', 'get', 'got', 'had', 'has', 'have', 'he', 'her', 'hers', 'him', 'his', 'how', 'however', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'just', 'least', 'let', 'like', 'likely', 'may', 'me', 'might', 'most', 'must', 'my', 'neither', 'no', 'nor', 'not', 'of', 'off', 'often', 'on', 'only', 'or', 'other', 'our', 'own', 'rather', 'said', 'say', 'says', 'she', 'should', 'since', 'so', 'some', 'than', 'that', 'the', 'their', 'them', 'then', 'there', 'these', 'they', 'this', 'tis', 'to', 'too', 'twas', 'us', 'wants', 'was', 'we', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'would', 'yet', 'you', 'your']
+
+punctuation = ['!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~', ' - ']
+# i kept the '-' out of this list
+
 ## ##################################################
 ## ##################################################
+
 def Wos_parser(in_dir,out_dir,verbose):
 
   ## INITIALIZATION
@@ -46,6 +54,8 @@ def Wos_parser(in_dir,out_dir,verbose):
   kompt_refs = 0
   kompt_corrupt_refs = 0
 
+  WOS_IDS = dict()  # list the wos-id of the articles   --- used to ensure that we do not parse an article twice!
+
   ## TREAT DATA
 
   for src in srclst:
@@ -55,6 +65,8 @@ def Wos_parser(in_dir,out_dir,verbose):
           print "..processing %d articles in file %s" % (len(pl.articles), src)
       if (len(pl.articles) > 0):
           for article in pl.articles:
+            if article.UT not in WOS_IDS:
+              WOS_IDS[article.UT] = ''
               id = id + 1
               #article 
               foo = article.AU.split('; ')
@@ -86,12 +98,21 @@ def Wos_parser(in_dir,out_dir,verbose):
               #keywords
               if(article.DE != ""):
                   foo = article.DE.split('; ')
-                  for i in range(len(foo)):
-                      f_keywords.write("%d\tAK\t%s\n" % (id,foo[i].upper()))
+                  for f in foo:
+                      f_keywords.write("%d\tAK\t%s\n" % (id,f.upper()))
               if(article.ID != ""):
                   foo = article.ID.split('; ')
-                  for i in range(len(foo)):
-                      f_keywords.write("%d\tIK\t%s\n" % (id,foo[i].upper()))
+                  for f in foo:
+                      f_keywords.write("%d\tIK\t%s\n" % (id,f.upper()))
+              if(article.TI != ""):
+                  foo = article.TI
+                  #... remove ponctuations !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~
+                  for p in punctuation: foo = foo.replace(p,'')
+                  foo = foo.split(' ')
+                  for f in foo:
+                    bar = f.lower()
+                    if bar not in common_words and len(bar)>0:
+                      f_keywords.write("%d\tTK\t%s\n" % (id, bar.upper()))
               #subjects
               if(article.WC != ""):
                   foo = article.WC.split('; ')
@@ -133,7 +154,7 @@ def Wos_parser(in_dir,out_dir,verbose):
 
 
   ## END
-
+  if verbose: print("..%d parsed articles in total") % (id + 1)
   if verbose: print("..%d inadequate refs out of %d (%f%%) have been rejected by this parsing process (no publication year, unpublished, ...) ") % (kompt_corrupt_refs, kompt_refs, (100.0 * kompt_corrupt_refs) / kompt_refs)
 
   f_articles.close()
