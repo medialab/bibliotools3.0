@@ -80,6 +80,7 @@ class Wosline:
         parse a line of the WoS txt output file  
         """
         s = line.split("\t")
+
         if len(s)==numCols:
             if(s[defCols['PT']]=='J'): self.PT = 'Journal' ## Publication Type (J=Journal; B=Book; S=Series)
             if(s[defCols['PT']]=='B'): self.PT = 'Book' 
@@ -102,7 +103,8 @@ class Wosline:
             self.BP = s[defCols['BP']] ## Beginning Page
             self.WC = s[defCols['WC']] ## Web of Science Category
             self.UT = s[defCols['UT']] ## Unique Article Identifier
-
+        else:
+            print "ARG %s != %s"%(len(s),numCols)
 ## ##################################################
 
 def defColumns(line):
@@ -143,7 +145,7 @@ class ArticleList:
             # read
             aux = 0
             for line in fd.readlines():
-                line = line.strip() # removes \n
+                line = line.strip("\n") # removes \n
                 if (line != ""):
                   if (aux == 1): # do not take 1st line into account! 
                     wline = Wosline()
