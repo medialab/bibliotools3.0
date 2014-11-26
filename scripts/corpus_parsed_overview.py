@@ -1,35 +1,53 @@
-
 import os
+import itertools
 
 corpus_parsed_dir="/home/pgi/Documents/events/20141125_sprint_medea/bibtools-data-parsed"
 
+def print_statistics_of(filename):
+	with open(os.path.join(corpus_parsed_dir,span,filename),"r") as file:
+		# dat file have one trailing blank line at end of file
+		data_lines=file.read().split("\n")[:-1]
+		entity_name=filename.split(".")[0]
+		if filename!="references.dat":
+			entities_by_articles=[aba.split("\t")[-1] for aba in data_lines]
+		else:
+			entities_by_articles=[",".join(aba.split("\t")[1:]) for aba in data_lines]
+		unique_entities = set(entities_by_articles)
+		print "- number of %s : unique %s total links with articles %s"%(entity_name,len(unique_entities),len(entities_by_articles))
+		print "occ,nb_%s,cumulative %%"%(entity_name)
+		occs=[len(list(g)) for (k,g) in itertools.groupby(sorted(entities_by_articles,reverse=True))]
+		l=[]
+		nb_occ_cumul=0
+		for occ,v in itertools.groupby(sorted(occs,reverse=True)):
+			nb_occ_cumul+=len(list(v))
+			occ_cumul=100*float(nb_occ_cumul)/len(unique_entities)
+			l.append((occ,nb_occ_cumul,occ_cumul))
+		string=""
+		for e in l:
+			string+="%02d,%02d,%04.1f%%\n"%(e)
+		print string
+
+
+
+
 for span in sorted(os.listdir(corpus_parsed_dir)):
-	print "#%s"%span
-	# dat file have one trailing blank line at end of file
+	print "\n\n#%s"%span
+	with open(os.path.join(corpus_parsed_dir,span,"articles.dat"),"r") as file:
+		# dat file have one trailing blank line at end of file
+		data_lines=file.read().split("\n")[:-1]
+		print "- number of articles : %s"%len(data_lines)
+	print_statistics_of("authors.dat")
+	print_statistics_of("countries.dat")
+	print_statistics_of("institutions.dat")
+	print_statistics_of("keywords.dat")
+	print_statistics_of("references.dat")
+	print_statistics_of("subjects.dat")
 
-	print "- number of articles : %s"%(len(open(os.path.join(corpus_parsed_dir,span,"articles.dat"),"r").read().split("\n"))-1)
-	
-	authors_by_articles=open(os.path.join(corpus_parsed_dir,span,"authors.dat"),"r").read().split("\n")
-	authors = set(aba.split("\t")[-1] for aba in authors_by_articles)
-	print "- number of authors : unique %s total links with articles %s"%(len(authors)-1,len(authors_by_articles)-1)
-	
-	countries_by_articles=open(os.path.join(corpus_parsed_dir,span,"countries.dat"),"r").read().split("\n")
-	countries = set(aba.split("\t")[-1] for aba in countries_by_articles)
-	print "- number of countries : unique %s total links with articles %s"%(len(countries)-1,len(countries_by_articles)-1)
-	
-	institutions_by_articles=open(os.path.join(corpus_parsed_dir,span,"institutions.dat"),"r").read().split("\n")
-	institutions = set(aba.split("\t")[-1] for aba in institutions_by_articles)
-	print "- number of institutions : unique %s total links with articles %s"%(len(institutions)-1,len(institutions_by_articles)-1)
-
-	keywords_by_articles=open(os.path.join(corpus_parsed_dir,span,"keywords.dat"),"r").read().split("\n")
-	keywords = set(aba.split("\t")[-1] for aba in keywords_by_articles)
-	print "- number of keywords : unique %s total links with articles %s"%(len(keywords)-1,len(keywords_by_articles)-1)
-
-	references_by_articles=open(os.path.join(corpus_parsed_dir,span,"references.dat"),"r").read().split("\n")
-	references = set(aba.split("\t")[-1] for aba in references_by_articles)
-	print "- number of references : unique %s total links with articles %s"%(len(references)-1,len(references_by_articles)-1)
-
-	subjects_by_articles=open(os.path.join(corpus_parsed_dir,span,"subjects.dat"),"r").read().split("\n")
-	subjects = set(aba.split("\t")[-1] for aba in subjects_by_articles)
-	print "- number of subjects : unique %s total links with articles %s"%(len(subjects)-1,len(subjects_by_articles)-1)
-	
+# years_spans={
+# 	"pre-AR1":{"authors":,"countries":,"institutions":,"keywords":,"references":,"subjects":},
+# 	"pre-AR2":[1990,1994],
+# 	"pre-AR3":[1995,2000],
+# 	"pre-AR4":[2001,2006],
+# 	"pre-AR5":[2007,2013]
+# }
+# 	
