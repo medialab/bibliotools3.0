@@ -64,6 +64,7 @@ def Wos_parser(in_dir,out_dir,verbose):
           print "..processing %d articles in file %s" % (len(pl.articles), src)
       if (len(pl.articles) > 0):
           for article in pl.articles:
+            
             if article.UT not in WOS_IDS:
               WOS_IDS[article.UT] = ''
               id = id + 1
@@ -154,7 +155,7 @@ def Wos_parser(in_dir,out_dir,verbose):
 
   ## END
   if verbose: print("..%d parsed articles in total") % (id + 1)
-  if verbose: print("..%d inadequate refs out of %d (%f%%) have been rejected by this parsing process (no publication year, unpublished, ...) ") % (kompt_corrupt_refs, kompt_refs, (100.0 * kompt_corrupt_refs) / kompt_refs)
+  if verbose: print("..%d inadequate refs out of %d (%f%%) have been rejected by this parsing process (no publication year, unpublished, ...) ") % (kompt_corrupt_refs, kompt_refs, (100.0 * kompt_corrupt_refs) / kompt_refs if kompt_refs!=0 else 0)
 
   f_articles.close()
   f_authors.close()
