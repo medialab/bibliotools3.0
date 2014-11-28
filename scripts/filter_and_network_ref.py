@@ -56,6 +56,7 @@ for span in sorted(os.listdir(corpus_parsed_dir)):
 	print "remove nodes with degree = 0"
 	g.remove_nodes_from(r for (r,d) in g.degree_iter() if d <1)
 	networkx.set_node_attributes(g, 'type', "reference")
+	
 	if export_format =="gexf":
 		print "write gexf export"
 		networkx.write_gexf(g,os.path.join(corpus_parsed_dir,span,"%s.gexf"%span),encoding="UTF-8")
@@ -70,6 +71,6 @@ for span in sorted(os.listdir(corpus_parsed_dir)):
 		data = json_graph.node_link_data(g)
 		json.dump(data,open(os.path.join(corpus_parsed_dir,span,"%s.json"%span),"w"),encoding='UTF-8')
 	else:
-		print  "no export copatible export format specified"
+		print  "no export compatible export format specified"
 
 
