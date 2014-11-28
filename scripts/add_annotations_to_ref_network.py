@@ -12,9 +12,9 @@ corpus_parsed_dir="/home/pgi/Documents/events/20141125_sprint_medea/bibtools-dat
 spans={
 	"process_verbose":False,
 	"report_verbose":True,
+	"report_csv":True,
 	"pre-AR1":{
-		"ref_occ_min":0,
-		"ref_link_weight_min":1,
+		"references":{"occ":0,"weight":1},
 		"subjects":{"occ":0,"weight":1},
 		"authors":{"occ":2,"weight":1},
 		"institutions":{"occ":2,"weight":1},
@@ -22,44 +22,40 @@ spans={
 		"countries":{"occ":2,"weight":1},
 	},
 	"pre-AR2":{
-		"ref_occ_min":2,
-		"ref_link_weight_min":1,
+		"references":{"occ":2,"weight":1},
 		"subjects":{"occ":0,"weight":1},
-		"authors":{"occ":2,"weight":2},
+		"authors":{"occ":2,"weight":3},
 		"institutions":{"occ":2,"weight":2},
-		"keywords":{"occ":2,"weight":2},
-		"countries":{"occ":2,"weight":2},
-	},
-	"pre-AR3":{
-		"ref_occ_min":3,
-		"ref_link_weight_min":1,
-		"subjects":{"occ":0,"weight":1},
-		"authors":{"occ":2,"weight":4},
-		"institutions":{"occ":2,"weight":5},
 		"keywords":{"occ":2,"weight":3},
 		"countries":{"occ":2,"weight":2},
 	},
-	"pre-AR4":{
-		"ref_occ_min":4,
-		"ref_link_weight_min":1,
+	"pre-AR3":{
+		"references":{"occ":3,"weight":1},
 		"subjects":{"occ":0,"weight":1},
 		"authors":{"occ":2,"weight":4},
-		"institutions":{"occ":2,"weight":5},
-		"keywords":{"occ":2,"weight":5},
+		"institutions":{"occ":2,"weight":4},
+		"keywords":{"occ":2,"weight":4},
 		"countries":{"occ":2,"weight":2},
 	},
+	"pre-AR4":{
+		"references":{"occ":4,"weight":1},
+		"subjects":{"occ":0,"weight":1},
+		"authors":{"occ":2,"weight":5},
+		"institutions":{"occ":2,"weight":6},
+		"keywords":{"occ":2,"weight":6},
+		"countries":{"occ":2,"weight":3},
+	},
 	"pre-AR5":{
-		"ref_occ_min":10,
-		"ref_link_weight_min":2,
-		"subjects":{"occ":0,"weight":2},
+		"references":{"occ":10,"weight":2},
+		"subjects":{"occ":0,"weight":1},
 		"authors":{"occ":2,"weight":10},
-		"institutions":{"occ":2,"weight":12},
-		"keywords":{"occ":2,"weight":10},
-		"countries":{"occ":2,"weight":10},
+		"institutions":{"occ":2,"weight":13},
+		"keywords":{"occ":2,"weight":12},
+		"countries":{"occ":2,"weight":7},
 	}
 }
 import_format="gexf" # possible values : edgelist OR gexf
-export_format="graphml"
+export_format="no"
 
 def add_edge_weight(graph, node1, node2,weight=1):
     if graph.has_edge(node1, node2):
@@ -98,10 +94,22 @@ def add_annotations(items_name,references_article_grouped,g):
 			g.add_nodes_from((s for s,nb in items_filtered),label=s,type=items_name)
 			for s,w in items_filtered:
 				add_edge_weight(g,r,s,w)
-	if spans["report_verbose"] : print "added %s %s nodes in network"%(len(g.nodes())-nb_nodes_before,items_name)
+
+	if spans["process_verbose"] : print "remove nodes with degree = 0"
+	g.remove_nodes_from(n for (n,d) in g.degree_iter() if d <1)
+	nb_items_added=len(g.nodes())-nb_nodes_before
+	if spans["report_verbose"] : print "added %s %s nodes in network"%(nb_items_added,items_name)
+	spans[span][items_name]["occ_filtered"]=nb_items_added
 	return g
 
-for span in sorted(os.listdir(corpus_parsed_dir)):
+if spans["report_csv"]:
+	line=["span","nb references"]
+	for items in ["subjects","authors","institutions","keywords","countries"]:
+			line+=["f %s"%items,"nb %s"%items,"p %s"%items]
+	csv_export=[]
+	csv_export.append(",".join(line))
+
+for span in sorted([n for n in os.listdir(corpus_parsed_dir) if os.path.isdir(os.path.join(corpus_parsed_dir, n)) ]):
 	if spans["process_verbose"] or spans["report_verbose"] : print "\n#%s"%span
 
 	g=networkx.Graph()
@@ -125,6 +133,7 @@ for span in sorted(os.listdir(corpus_parsed_dir)):
 	network_references=g.nodes()
 
 	if spans["report_verbose"] : print "load %s ref from graph"%len(network_references)
+	spans[span]["references"]["occ_filtered"]=len(network_references)
 
 	with codecs.open(os.path.join(corpus_parsed_dir,span,"references.dat"),"r",encoding="UTF-8") as file:
 		# dat file have one trailing blank line at end of file
@@ -134,7 +143,7 @@ for span in sorted(os.listdir(corpus_parsed_dir)):
 
 	references_by_articles.sort(key=lambda e:e[1])
 	article_groupby_reference=((reference,list(ref_arts)) for reference,ref_arts in itertools.groupby(references_by_articles,key=lambda e:e[1]))
-	references_article_grouped=[t for t in article_groupby_reference if len(t[1])>=spans[span]["ref_occ_min"]]
+	references_article_grouped=[t for t in article_groupby_reference if len(t[1])>=spans[span]["references"]["occ"]]
 	#make sure we have same references than network
 	ref_filtered=[r for r,_ in references_article_grouped]
 	if(len(ref_filtered))!=len(network_references):
@@ -153,9 +162,8 @@ for span in sorted(os.listdir(corpus_parsed_dir)):
 	add_annotations("institutions",references_article_grouped,g)
 	add_annotations("keywords",references_article_grouped,g)
 	add_annotations("countries",references_article_grouped,g)
-	
-	if spans["process_verbose"] : print "remove nodes with degree = 0"
-	g.remove_nodes_from(n for (n,d) in g.degree_iter() if d <1)
+
+
 	if spans["report_verbose"] : print "have now %s nodes"%len(g.nodes())
 	if export_format =="gexf":
 		if spans["process_verbose"] : print "write gexf export"
@@ -170,4 +178,19 @@ for span in sorted(os.listdir(corpus_parsed_dir)):
 		if spans["process_verbose"] : print "write pajek export"
 		networkx.write_graphml(g,os.path.join(corpus_parsed_dir,span,"%s_annotated.graphml"%span))
 	else:
-		print  "no export copatible export format specified"
+		print  "no compatible export format specified"
+
+	if spans["report_csv"]:
+		line=[span]
+		nb_ref=spans[span]["references"]["occ_filtered"]
+		line.append(nb_ref)
+		for items in ["subjects","authors","institutions","keywords","countries"]:
+			f=spans[span][items]["weight"]
+			nb=spans[span][items]["occ_filtered"]
+			p="%04.1f"%(float(nb)/nb_ref*100)
+			line+=[f,nb,p]
+		csv_export.append(",".join(str(_) for _ in line))
+
+if spans["report_csv"]:
+	with open(os.path.join(corpus_parsed_dir,"filtering_report.csv"),"w") as csvfile:
+		csvfile.write("\n".join(csv_export))
