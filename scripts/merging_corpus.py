@@ -1,78 +1,79 @@
-
-
 import os
 import datetime
+from config_co2 import *
 
-#wos exports grouped in subfolders
-indir="/home/pgi/Documents/events/20141125_sprint_medea/bibtools-data"
-
-subfolders=os.listdir(indir)
-wos_headers="PT	AU	BA	BE	GP	AF	BF	CA	TI	SO	SE	BS	LA	DT	CT	CY	CL	SP	HO	DE	ID	AB	C1	RP	EM	RI	OI	FU	FX	CR	NR	TC	Z9	PU	PI	PA	SN	EI	BN	J9	JI	PD	PY	VL	IS	PN	SU	SI	MA	BP	EP	AR	DI	D2	PG	WC	SC	GA	UT	PM"
-
-one_saverec_file="all_years.txt"
-onefile_output=open(os.path.join("/home/pgi/Documents/events/20141125_sprint_medea/",one_saverec_file),"w")
+#preparing the one file corpus
+onefile_output=open(one_file_corpus,"w")
 onefile_output.write(wos_headers+"\n")
 
-nb_extra_trailing_tab=0
+# check reports_directory
+if not os.path.exists(reports_directory):
+    os.mkdir(reports_directory)
+elif not os.path.isdir(reports_directory):
+    print "remove file %s or change reports_directory value in config"%reports_directory
+    exit()
 
-for root, subFolders, files in os.walk(indir):
+errorsfile_output=open(os.path.join(reports_directory,"wos_lines_with_errors.csv"),"w")
+errorsfile_output.write(wos_headers+"\n")
+
+nb_values_in_wos=len(wos_headers.split("\t"))
+
+# walk the many files in wos corpus
+nb_extra_trailing_tab=0
+for root, subFolders, files in os.walk(wos_data):
     for file in files:
         filepath=os.path.join(root,file)
         print "merging %s"%filepath
         with open(filepath,"r") as f:
-            # remove first line
+            # remove first line containing headers
             lines=f.read().split("\n")[1:]
 
             #and remove last character if trailing tab
             lines = [l.strip(" ") for l in lines]
             lines = [l.strip("\r") for l in lines]
             lines_=[]
+            lines_with_errors=[]
             for l in lines :
                 if "\t" in l:
                     # FILTERING BLANK LINES
-                    if len(l.split("\t"))>60 :
-                        if l[-1:]=="\t":
-                            l=l[:-1] #extra tab
+                    if len(l.split("\t"))>nb_values_in_wos :
+                        if l[-1]=="\t":
+                            lines_.append(l[:-1]) #stripping extra tab
                             nb_extra_trailing_tab+=1
                         else:
-                            print "warning fromat problem with %s"%l[-20:]
-                    elif len(l.split("\t"))<60:
-                        print "warning fromat problem with %s"%l[-20:]
-                    lines_.append(l)
+                            print "warning too many columns with %s"%l[-20:]
+                            lines_with_errors.append(l)
+                    elif len(l.split("\t"))<nb_values_in_wos:
+                        print "warning too few columns with %s"%l[-20:]
+                        lines_with_errors.append(l)
+                    else:
+                        lines_.append(l)
             onefile_output.write("\n".join(lines_)+"\n")
-print "all files merged into %s"% one_saverec_file
-print "found %s trailing extra tab"%(nb_extra_trailing_tab)
+            errorsfile_output.write("\n".join(lines_with_errors)+"\n")
 
+print "all files merged into %s"% one_file_corpus
+print "repaired %s lines with trailing extra tab"%(nb_extra_trailing_tab)
+print "found %s lines with extra/too few columns all merged into wos_lines_with_errors.csv"%(len(lines_with_errors))
+
+# output the articles number by years
 years_spans={}
 onefile_output.close()
-onefile_output=open(os.path.join("/home/pgi/Documents/events/20141125_sprint_medea/",one_saverec_file),"r")
+onefile_output=open(one_file_corpus,"r")
+# remove headers
 onefile_output.readline()
 for line in onefile_output.readlines():
     # filter blank lines
     if "\t" in line:
+        # get year
         y=line.split("\t")[42]
+        # increment
         years_spans[y]=years_spans[y]+1 if y in years_spans else 1
 
+# years distribution
+years_distribution=open(os.path.join(reports_directory,"years_distribution.csv"),"w")
+years_distribution.write("year,nb_articles\n")
+print "year,nb_articles"
 for y,n in sorted(((y,n) for (y,n) in years_spans.iteritems()),key=lambda a: a[0]):
-    print "%s\t%s"%(y,n)
-
-
-# print "%s : parsing done, start networks gen"%years
-# small_thresholds={"l_thr":1,"vA":111111111,"vK":14,"vS":2,"vR":4,"vTK":20,"vY":11111111,"vC":3,"vJ":1111111,"vI":111111,"vRJ":111111111111}
-# medium_thresholds={"l_thr":2,"vA":111111111,"vK":28,"vS":4,"vR":12,"vTK":40,"vY":11111111,"vC":6,"vJ":1111111,"vI":111111,"vRJ":111111111111}
-# large_thresholds={"l_thr":3,"vA":111111111,"vK":56,"vS":8,"vR":36,"vTK":80,"vY":11111111,"vC":12,"vJ":1111111,"vI":111111,"vRJ":111111111111}
-# medium2_thresholds={"l_thr":2,"vA":111111111,"vK":21,"vS":3,"vR":8,"vTK":30,"vY":11111111,"vC":4,"vJ":1111111,"vI":111111,"vRJ":111111111111}
-# large2_thresholds={"l_thr":3,"vA":111111111,"vK":56,"vS":8,"vR":24,"vTK":80,"vY":11111111,"vC":12,"vJ":1111111,"vI":111111,"vRJ":111111111111}
-# prep_het_graph(parsed_folder,network_folder,0,True,large2_thresholds)
-# print "%s : network gen done, exit"%years
-# return True
-
-
-
-# pool = Pool(processes=2)
-
-# for subfolder in sorted(subfolders):
-# 	print subfolder
-#  	pool.apply_async(process_wos,(os.path.join(indir,subfolder),))
-# pool.close()
-# pool.join()
+    years_distribution.write("%s,%s\n"%(y,n))
+    print "%s,%s"%(y,n)
+print "years distribution reported in %s"%os.path.join(reports_directory,"years_distribution.csv") 
