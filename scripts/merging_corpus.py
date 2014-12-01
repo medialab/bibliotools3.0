@@ -1,12 +1,15 @@
 import os
 import datetime
-from config_co2 import *
+from config import CONFIG
 
 #preparing the one file corpus
+one_file_corpus=CONFIG["one_file_corpus"]
 onefile_output=open(one_file_corpus,"w")
+wos_headers=CONFIG["wos_headers"]
 onefile_output.write(wos_headers+"\n")
 
 # check reports_directory
+reports_directory=CONFIG["reports_directory"]
 if not os.path.exists(reports_directory):
     os.mkdir(reports_directory)
 elif not os.path.isdir(reports_directory):
@@ -20,7 +23,7 @@ nb_values_in_wos=len(wos_headers.split("\t"))
 
 # walk the many files in wos corpus
 nb_extra_trailing_tab=0
-for root, subFolders, files in os.walk(wos_data):
+for root, subFolders, files in os.walk(CONFIG["wos_data"]):
     for file in files:
         filepath=os.path.join(root,file)
         print "merging %s"%filepath
