@@ -4,7 +4,7 @@ from config import CONFIG
 
 
 indir=os.path.dirname(CONFIG["one_file_corpus"])
-output_dir="wosdata_by_AR"
+output_dir=CONFIG["wos_data_grouped"]
 if not os.path.exists(os.path.join(indir,output_dir)):
 	os.mkdir(os.path.join(indir,output_dir))
 outdir_prefix=CONFIG["parsed_data"]
