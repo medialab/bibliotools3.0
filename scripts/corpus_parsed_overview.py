@@ -1,10 +1,14 @@
 import os
 import itertools
+from config import CONFIG
 
-corpus_parsed_dir="/home/pgi/Documents/events/20141125_sprint_medea/bibtools-data-parsed"
+def print_and_report(message):
+	print message
+	with open(os.path.join(CONFIG["reports_directory"],"corpus_overview.txt"),"w+") as f:
+		f.write(message+"\n")
 
 def print_statistics_of(filename):
-	with open(os.path.join(corpus_parsed_dir,span,filename),"r") as file:
+	with open(os.path.join(CONFIG["parsed_data"],span,filename),"r") as file:
 		# dat file have one trailing blank line at end of file
 		data_lines=file.read().split("\n")[:-1]
 		entity_name=filename.split(".")[0]
@@ -13,29 +17,32 @@ def print_statistics_of(filename):
 		else:
 			entities_by_articles=[",".join(aba.split("\t")[1:]) for aba in data_lines]
 		unique_entities = set(entities_by_articles)
-		print "- number of %s : unique %s total links with articles %s"%(entity_name,len(unique_entities),len(entities_by_articles))
-		print "occ,nb_%s,cumulative %%"%(entity_name)
-		occs=[len(list(g)) for (k,g) in itertools.groupby(sorted(entities_by_articles,reverse=True))]
-		l=[]
-		nb_occ_cumul=0
-		for occ,v in itertools.groupby(sorted(occs,reverse=True)):
-			nb_occ_cumul+=len(list(v))
-			occ_cumul=100*float(nb_occ_cumul)/len(unique_entities)
-			l.append((occ,nb_occ_cumul,occ_cumul))
-		string=""
-		for e in l:
-			string+="%02d,%02d,%04.1f%%\n"%(e)
-		print string
+		print_and_report("- number of %s : unique %s total links with articles %s"%(entity_name,len(unique_entities),len(entities_by_articles)))
+		
+		# cumulative distribution of entities distribution
+		with open(os.path.join(CONFIG["reports_directory"],"%s_%s_distribution.csv"%(span,entity_name)),"w") as f:
+			f.write("occ,nb_%s,cumulative %%\n"%(entity_name))
+			occs=[len(list(g)) for (k,g) in itertools.groupby(sorted(entities_by_articles,reverse=True))]
+			l=[]
+			nb_occ_cumul=0
+			for occ,v in itertools.groupby(sorted(occs,reverse=True)):
+				nb_occ_cumul+=len(list(v))
+				occ_cumul=100*float(nb_occ_cumul)/len(unique_entities)
+				l.append((occ,nb_occ_cumul,occ_cumul))
+			string=""
+			for e in l:
+				string+="%02d,%02d,%04.1f%%\n"%(e)
+			f.write(string)
 
 
 
 
-for span in sorted(os.listdir(corpus_parsed_dir)):
-	print "\n\n#%s"%span
-	with open(os.path.join(corpus_parsed_dir,span,"articles.dat"),"r") as file:
+for span in CONFIG["spans"]:
+	print_and_report("\n\n#%s"%span)
+	with open(os.path.join(CONFIG["parsed_data"],span,"articles.dat"),"r") as file:
 		# dat file have one trailing blank line at end of file
 		data_lines=file.read().split("\n")[:-1]
-		print "- number of articles : %s"%len(data_lines)
+		print_and_report("- number of articles : %s"%len(data_lines))
 	print_statistics_of("authors.dat")
 	print_statistics_of("countries.dat")
 	print_statistics_of("institutions.dat")
@@ -43,11 +50,3 @@ for span in sorted(os.listdir(corpus_parsed_dir)):
 	print_statistics_of("references.dat")
 	print_statistics_of("subjects.dat")
 
-# years_spans={
-# 	"pre-AR1":{"authors":,"countries":,"institutions":,"keywords":,"references":,"subjects":},
-# 	"pre-AR2":[1990,1994],
-# 	"pre-AR3":[1995,2000],
-# 	"pre-AR4":[2001,2006],
-# 	"pre-AR5":[2007,2013]
-# }
-# 	
