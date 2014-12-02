@@ -71,11 +71,15 @@ def add_annotations(items_name,references_article_grouped,g):
 	with codecs.open(os.path.join(CONFIG["parsed_data"],span,"%s.dat"%items_name),"r",encoding="UTF-8") as items_file:
 		articles_items=[(l.split("\t")[0],l.split("\t")[-1]) for l in items_file.read().split("\n")[:-1]]
 		if CONFIG["process_verbose"] : print "imported %s"%items_name
+	
+
 		
+
 	# grouping by item
 	articles_items.sort(key=lambda e:e[1])
 	item_articles_grouped=[(item,list(items_arts)) for item,items_arts in itertools.groupby(articles_items,key=lambda e:e[1])]
 	# filtering by occ
+	items_occs=dict((item,len(items_arts)) for item,items_arts in item_articles_grouped if len(items_arts)>=CONFIG["spans"][span][items_name]["occ"])
 	article_items = [t for _ in (items_arts for item,items_arts in item_articles_grouped if len(items_arts)>=CONFIG["spans"][span][items_name]["occ"]) for t in _]
 	if CONFIG["report_verbose"] :print "filtered %s by occ>=%s"%(items_name,CONFIG["spans"][span][items_name]["occ"])
 
@@ -93,19 +97,20 @@ def add_annotations(items_name,references_article_grouped,g):
 		items_filtered=[(s,nb) for s,nb in items_grouped if nb>=CONFIG["spans"][span][items_name]["weight"]]
 		
 		if len(items_filtered)>0:
-			g.add_nodes_from((s for s,nb in items_filtered),label=s,type=items_name)
+
 			for s,w in items_filtered:
+				g.add_node(s,label=s,type=items_name,occurence_count=items_occs[s])
 				add_edge_weight(g,r,s,w)
 
 	if CONFIG["process_verbose"] : print "remove nodes with degree = 0"
-	g.remove_nodes_from(n for (n,d) in g.degree_iter() if d <1)
+	g.remove_nodes_from(r for (r,d) in g.degree_iter() if d <1)
 	nb_items_added=len(g.nodes())-nb_nodes_before
 	if CONFIG["report_verbose"] : print "added %s %s nodes in network"%(nb_items_added,items_name)
 	CONFIG["spans"][span][items_name]["occ_filtered"]=nb_items_added
 	return g
 
 if CONFIG["report_csv"]:
-	line=["span","nb references","ratio_prev_ref"]
+	line=["span","nb articles","nb ref","f_ref","nb_ref_filtered","ratio_prev_ref"]
 	for items in ["subjects","authors","institutions","keywords","countries"]:
 			line+=["f %s"%items,"nb %s"%items,"p %s"%items]
 	csv_export=[]
@@ -134,6 +139,8 @@ for span in sorted(CONFIG["spans"]):
 
 	network_references=g.nodes()
 
+	networkx.set_node_attributes(g, 'occurence_count', 0)
+
 	if CONFIG["report_verbose"] : print "load %s ref from graph"%len(network_references)
 	CONFIG["spans"][span]["references"]["occ_filtered"]=len(network_references)
 
@@ -144,7 +151,8 @@ for span in sorted(CONFIG["spans"]):
 	#references_by_articles_filtered=[(a,r) for a,r in references_by_articles if r in references] 
 
 	references_by_articles.sort(key=lambda e:e[1])
-	article_groupby_reference=((reference,list(ref_arts)) for reference,ref_arts in itertools.groupby(references_by_articles,key=lambda e:e[1]))
+	article_groupby_reference=[(reference,list(ref_arts)) for reference,ref_arts in itertools.groupby(references_by_articles,key=lambda e:e[1])]
+	nb_reference_before_filtering=len(article_groupby_reference)
 	references_article_grouped=[t for t in article_groupby_reference if len(t[1])>=CONFIG["spans"][span]["references"]["occ"]]
 	#make sure we have same references than network
 	ref_filtered=[r for r,_ in references_article_grouped]
@@ -182,18 +190,24 @@ for span in sorted(CONFIG["spans"]):
 	else:
 		print  "no compatible export format specified"
 
+	with codecs.open(os.path.join(CONFIG["parsed_data"],span,"articles.dat"),"r",encoding="UTF-8") as articles_file:
+		nb_articles=len(articles_file.read().split("\n")[:-1])
+		
 	if CONFIG["report_csv"]:
 		line=[span]
-		nb_ref=CONFIG["spans"][span]["references"]["occ_filtered"]
-		line.append(nb_ref)
-		line.append(nb_ref/csv_export[-1].split(",")[2] if len(csv_export)>0 else "")
+		line.append(nb_articles)
+		line.append(nb_reference_before_filtering)
+		line.append("%s | %s"%(CONFIG["spans"][span]["references"]["occ"],CONFIG["spans"][span]["references"]["weight"]))
+		nb_ref_filtered=CONFIG["spans"][span]["references"]["occ_filtered"]
+		line.append(nb_ref_filtered)
+		line.append("%04.1f"%(float(nb_reference_before_filtering)/int(csv_export[-1].split(",")[2])) if len(csv_export)>1 else "")
 		for items in ["subjects","authors","institutions","keywords","countries"]:
 			f=CONFIG["spans"][span][items]["weight"]
 			nb=CONFIG["spans"][span][items]["occ_filtered"]
-			p="%04.1f"%(float(nb)/nb_ref*100)
+			p="%04.1f | %04.1f"%(float(nb)/nb_reference_before_filtering*1000,float(nb)/nb_articles*1000)
 			line+=[f,nb,p]
 		csv_export.append(",".join(str(_) for _ in line))
 
 if CONFIG["report_csv"]:
-	with open(os.path.join(CONFIG["parsed_data"],"filtering_report.csv"),"w") as csvfile:
+	with open(os.path.join(CONFIG["reports_directory"],"filtering_report.csv"),"w") as csvfile:
 		csvfile.write("\n".join(csv_export))
