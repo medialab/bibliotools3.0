@@ -1,25 +1,28 @@
 
 CONFIG={
-	# directories 
+	# step one (merging_corpus.py) mandatory 
 	"wos_data":"path_to_wos_data_exports",
-	"wos_data_grouped":"path_where_to_store_wos_data_grouped_by_time_span",
-	"parsed_data":"path_where_to_store_wos_data_parsed",
 	"one_file_corpus":"filename_with_path_in_which_to_merge_all_wos_data",
 	"reports_directory":"path_to_where_to_store_reports",
-	# verbose
-	"process_verbose":False,
-	"report_verbose":True,
-	"report_csv":True,
+
+	# step two (parse_and_group.py) mandatory 
+	"wos_data_grouped":"path_where_to_store_wos_data_grouped_by_time_span",
+	"parsed_data":"path_where_to_store_wos_data_parsed",
 	# a span is a period of time defined by years
 	# large wos corpus are likely to be cutted into time-spans
 	# any data outside spans will be ignored
 	"spans":{
 			"span_name":{
 				"years":[1900,1969],
+				
 				#filtering:
 				# occ : minimum number of occurences in corpus 
 				# weight : minimum number of co-occurences with reference in articles (edge weight)
+				
+				#filtering on reference are mandatory from step three
 				"references":{"occ":2,"weight":1},
+
+				#filtering on items are mandatory from step four
 				"subjects":{"occ":0,"weight":1},
 				"authors":{"occ":0,"weight":1},
 				"institutions":{"occ":0,"weight":1},
@@ -28,9 +31,6 @@ CONFIG={
 			},
 			"span_name_2":{
 				"years":[1970,1989],
-				#filtering:
-				# occ : minimum number of occurences in corpus 
-				# weight : minimum number of co-occurences with reference in articles (edge weight)
 				"references":{"occ":8,"weight":1},
 				"subjects":{"occ":0,"weight":2},
 				"authors":{"occ":2,"weight":10},
@@ -39,8 +39,17 @@ CONFIG={
 				"countries":{"occ":2,"weight":3},
 			}
 	},
+
+	#step three mandatory
 	# network formats should be choosen in networkx format list
 	"export_ref_format":"gexf",
+
+	# verbose
+	"process_verbose":False,
+	"report_verbose":True,
+	"report_csv":True,
+	
+	
 	"export_ref_annotated_format":"graphml",#can't be gexf because of bug #1296 in networkx see https://github.com/networkx/networkx/issues/1296
 	# If your wos export file don't have this first line, it's not going to work!
 	"wos_headers":"PT	AU	BA	BE	GP	AF	BF	CA	TI	SO	SE	BS	LA	DT	CT	CY	CL	SP	HO	DE	ID	AB	C1	RP	EM	RI	OI	FU	FX	CR	NR	TC	Z9	PU	PI	PA	SN	EI	BN	J9	JI	PD	PY	VL	IS	PN	SU	SI	MA	BP	EP	AR	DI	D2	PG	WC	SC	GA	UT	PM",
