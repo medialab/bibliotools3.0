@@ -1,6 +1,7 @@
 import os
 from parser import Wos_parser
 from config import CONFIG
+import traceback
 
 
 indir=os.path.dirname(CONFIG["one_file_corpus"])
@@ -33,8 +34,9 @@ for line in onefile_output.readlines():
 				if y >= ys[0] and y<= ys[1]:
 					files[l].write(line)
 		
-		except : 
-			print "oups year %s can't be cat to int "%y
+		except Exception as e:
+			print traceback.format_exc()
+			exit()
 
 for (l,ys) in years_spans.iteritems():
 	files[l].close()
