@@ -25,6 +25,7 @@ for span in sorted(CONFIG["spans"]):
 	del(data_lines)
 	# filter ref which occurs un only one article
 	references_article_grouped=[(reference,list(ref_arts)) for reference,ref_arts in itertools.groupby(references_by_articles,key=lambda e:e[1])]
+	references_occs=dict([(reference,len(list(ref_arts))) for reference,ref_arts in references_article_grouped if len(ref_arts)>=CONFIG["spans"][span]["references"]["occ"]])
 	print "filtering references"
 	references_by_articles_filtered = [t for _ in (ref_arts for ref,ref_arts in references_article_grouped if len(ref_arts)>=CONFIG["spans"][span]["references"]["occ"]) for t in _]
 	
@@ -40,6 +41,8 @@ for span in sorted(CONFIG["spans"]):
 	for article,art_refs in itertools.groupby(references_by_articles_filtered,key=lambda e:e[0]):
 		#one link between ref cited by same article
 		for r1,r2 in itertools.combinations((r for a,r in art_refs),2):
+			g.add_node(r1,type="references",occurence_count=references_occs[r1])
+			g.add_node(r2,type="references",occurence_count=references_occs[r2])
 			add_edge_weight(g,r1,r2)
 	print "remove edges with weight < %s"%CONFIG["spans"][span]["references"]["weight"]
 	g.remove_edges_from((r1,r2) for (r1,r2,d) in g.edges(data=True) if d['weight'] <CONFIG["spans"][span]["references"]["weight"])
