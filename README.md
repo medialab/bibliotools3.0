@@ -27,6 +27,8 @@ This will split the corpus into time-spans writing one file for each in a specif
 It will then parse the many WOS files to outputs article-id{tab}items indeces files.
 Items are : references, subjects, authors, institutions, keywords, countries.
 
+This steps uses parser.py and Utils.py from bibliotools 2. You'll find in this repository a better version of parser.py  and Utils.py in which I removed [one important bug](https://github.com/medialab/bibliotools3.0/commit/38bd140af4f0246930e730a47ad3ef5027c63b3c).
+
 #### 2-3. Define filtering
 One can use the script corpus_parsed_overview.py to outputs many reports about the corpus.
 ADD DOCUMENTATION about the reports
@@ -67,7 +69,10 @@ To do so in [Gephi](http://www.gephi.org):
 - start the layout again to position the items (references, subjects, authors, institutions, keywords, countries)
 - Now you can try to understand how your scientific papers corpus is based on references communities and to describe those communities by analysing their use of keywords, subjects...
 
-	
+#### requirements
+```
+pip install networkx
+```	
 
 
 ### this work is a modification of bibliotools 2.2 from Sébastian Grauwin
