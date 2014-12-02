@@ -4,7 +4,7 @@ from config import CONFIG
 
 def print_and_report(message):
 	print message
-	with open(os.path.join(CONFIG["reports_directory"],"corpus_overview.txt"),"w+") as f:
+	with open(os.path.join(CONFIG["reports_directory"],"corpus_overview.txt"),"a") as f:
 		f.write(message+"\n")
 
 def print_statistics_of(filename):
@@ -35,7 +35,8 @@ def print_statistics_of(filename):
 			f.write(string)
 
 
-
+if os.path.exists(os.path.join(CONFIG["reports_directory"],"corpus_overview.txt")):
+	os.remove(os.path.join(CONFIG["reports_directory"],"corpus_overview.txt"))
 
 for span in CONFIG["spans"]:
 	print_and_report("\n\n#%s"%span)
