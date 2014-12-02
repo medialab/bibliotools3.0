@@ -5,59 +5,9 @@ import itertools
 from networkx.readwrite import json_graph
 import json
 import codecs
-import md5
 
 from config import CONFIG
 
-# configuration
-# CONFIG["parsed_data"]="/home/pgi/Documents/events/20141125_sprint_medea/bibtools-data-parsed"
-# spans={
-# 	"process_verbose":False,
-# 	"report_verbose":True,
-# 	"report_csv":True,
-# 	"pre-AR1":{
-# 		"references":{"occ":0,"weight":1},
-# 		"subjects":{"occ":0,"weight":1},
-# 		"authors":{"occ":2,"weight":1},
-# 		"institutions":{"occ":2,"weight":1},
-# 		"keywords":{"occ":2,"weight":1},
-# 		"countries":{"occ":2,"weight":1},
-# 	},
-# 	"pre-AR2":{
-# 		"references":{"occ":2,"weight":1},
-# 		"subjects":{"occ":0,"weight":1},
-# 		"authors":{"occ":2,"weight":3},
-# 		"institutions":{"occ":2,"weight":2},
-# 		"keywords":{"occ":2,"weight":3},
-# 		"countries":{"occ":2,"weight":2},
-# 	},
-# 	"pre-AR3":{
-# 		"references":{"occ":3,"weight":1},
-# 		"subjects":{"occ":0,"weight":1},
-# 		"authors":{"occ":2,"weight":4},
-# 		"institutions":{"occ":2,"weight":4},
-# 		"keywords":{"occ":2,"weight":4},
-# 		"countries":{"occ":2,"weight":2},
-# 	},
-# 	"pre-AR4":{
-# 		"references":{"occ":4,"weight":1},
-# 		"subjects":{"occ":0,"weight":1},
-# 		"authors":{"occ":2,"weight":5},
-# 		"institutions":{"occ":2,"weight":6},
-# 		"keywords":{"occ":2,"weight":6},
-# 		"countries":{"occ":2,"weight":3},
-# 	},
-# 	"pre-AR5":{
-# 		"references":{"occ":10,"weight":2},
-# 		"subjects":{"occ":0,"weight":1},
-# 		"authors":{"occ":2,"weight":10},
-# 		"institutions":{"occ":2,"weight":13},
-# 		"keywords":{"occ":2,"weight":12},
-# 		"countries":{"occ":2,"weight":7},
-# 	}
-# }
-# CONFIG["export_ref_format"]="gexf" # possible values : edgelist OR gexf
-# export_format="no"
 
 def add_edge_weight(graph, node1, node2,weight=1):
     if graph.has_edge(node1, node2):
