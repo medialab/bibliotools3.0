@@ -6,6 +6,7 @@ from networkx.readwrite import json_graph
 import json
 import codecs
 
+
 from config import CONFIG
 
 
@@ -22,16 +23,15 @@ def add_annotations(items_name,references_article_grouped,g):
 		articles_items=[(l.split("\t")[0],l.split("\t")[-1]) for l in items_file.read().split("\n")[:-1]]
 		if CONFIG["process_verbose"] : print "imported %s"%items_name
 	
-
-		
-
 	# grouping by item
 	articles_items.sort(key=lambda e:e[1])
 	item_articles_grouped=[(item,list(items_arts)) for item,items_arts in itertools.groupby(articles_items,key=lambda e:e[1])]
+	del articles_items
 	# filtering by occ
 	items_occs=dict((item,len(items_arts)) for item,items_arts in item_articles_grouped if len(items_arts)>=CONFIG["spans"][span][items_name]["occ"])
 	article_items = [t for _ in (items_arts for item,items_arts in item_articles_grouped if len(items_arts)>=CONFIG["spans"][span][items_name]["occ"]) for t in _]
 	if CONFIG["report_verbose"] :print "filtered %s by occ>=%s"%(items_name,CONFIG["spans"][span][items_name]["occ"])
+	del item_articles_grouped 
 
 	# grouping by article
 	article_items.sort(key=lambda e:e[0])
@@ -44,14 +44,19 @@ def add_annotations(items_name,references_article_grouped,g):
 		items.sort()
 		
 		items_grouped=((s, len(list(vs))) for s,vs in itertools.groupby(items))
+
 		items_filtered=[(s,nb) for s,nb in items_grouped if nb>=CONFIG["spans"][span][items_name]["weight"]]
-		
+		del items
+		del items_grouped
+
 		if len(items_filtered)>0:
 
 			for s,w in items_filtered:
 				g.add_node(s,label=s,type=items_name,occurence_count=items_occs[s])
 				add_edge_weight(g,r,s,w)
+		del items_filtered
 
+	
 	if CONFIG["process_verbose"] : print "remove nodes with degree = 0"
 	g.remove_nodes_from(r for (r,d) in g.degree_iter() if d <1)
 	nb_items_added=len(g.nodes())-nb_nodes_before
@@ -67,6 +72,7 @@ if CONFIG["report_csv"]:
 	csv_export.append(",".join(line))
 
 for span in sorted(CONFIG["spans"]):
+
 	if CONFIG["process_verbose"] or CONFIG["report_verbose"] : print "\n#%s"%span
 
 	g=networkx.Graph()
@@ -84,15 +90,14 @@ for span in sorted(CONFIG["spans"]):
 		data=json.load(open(os.path.join(CONFIG["parsed_data"],span,"%s.json"%span),"r"),encoding="UTF-8")
 		g=json_graph.node_link_graph(data)
 	else:
-		print  "no export copatible export format specified"
+		print  "no export compatible export format specified"
 		exit(1)
 
 	network_references=g.nodes()
+	nb_network_references=len(network_references)
 
-	networkx.set_node_attributes(g, 'occurence_count', 0)
-
-	if CONFIG["report_verbose"] : print "load %s ref from graph"%len(network_references)
-	CONFIG["spans"][span]["references"]["occ_filtered"]=len(network_references)
+	if CONFIG["report_verbose"] : print "load %s ref from graph"%nb_network_references
+	CONFIG["spans"][span]["references"]["occ_filtered"]=nb_network_references
 
 	with codecs.open(os.path.join(CONFIG["parsed_data"],span,"references.dat"),"r",encoding="UTF-8") as file:
 		# dat file have one trailing blank line at end of file
@@ -104,16 +109,21 @@ for span in sorted(CONFIG["spans"]):
 	article_groupby_reference=[(reference,list(ref_arts)) for reference,ref_arts in itertools.groupby(references_by_articles,key=lambda e:e[1])]
 	nb_reference_before_filtering=len(article_groupby_reference)
 	references_article_grouped=[t for t in article_groupby_reference if len(t[1])>=CONFIG["spans"][span]["references"]["occ"]]
+	del article_groupby_reference
+	del references_by_articles
 	#make sure we have same references than network
 	ref_filtered=[r for r,_ in references_article_grouped]
-	if(len(ref_filtered))!=len(network_references):
+	if(len(ref_filtered))!=nb_network_references:
 		s1=set(ref_filtered)
 		s2=set(network_references)
 		to_remove = s1 - s2
 		if len(to_remove)>0:
 			if CONFIG["report_verbose"] : print "filtering ref which are not in original network : removing %s ref"%len(to_remove)
 			references_article_grouped=[ (r,ref_arts) for r,ref_arts in references_article_grouped if r not in to_remove]
-
+		del s1
+		del s2
+	del ref_filtered
+	del network_references
 	# print references_article_grouped
 	if CONFIG["report_verbose"] : print "imported, filtered and grouped references by articles"
 
@@ -122,8 +132,7 @@ for span in sorted(CONFIG["spans"]):
 	add_annotations("institutions",references_article_grouped,g)
 	add_annotations("keywords",references_article_grouped,g)
 	add_annotations("countries",references_article_grouped,g)
-
-
+	del references_article_grouped
 	if CONFIG["report_verbose"] : print "have now %s nodes"%len(g.nodes())
 	if CONFIG["export_ref_annotated_format"] =="gexf":
 		if CONFIG["process_verbose"] : print "write gexf export"
@@ -157,6 +166,7 @@ for span in sorted(CONFIG["spans"]):
 			p="%04.1f | %04.1f"%(float(nb)/nb_reference_before_filtering*1000,float(nb)/nb_articles*1000)
 			line+=[f,nb,p]
 		csv_export.append(",".join(str(_) for _ in line))
+	del g
 
 if CONFIG["report_csv"]:
 	with open(os.path.join(CONFIG["reports_directory"],"filtering_report.csv"),"w") as csvfile:
