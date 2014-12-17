@@ -49,10 +49,15 @@ CONFIG={
 	"report_verbose":True,
 	"report_csv":True,
 	
+	# number of processes to use in annotations_multiproc.py
+	# beware the more processes the more memory is needed 
+	"nb_processes":2,
+
 	
 	"export_ref_annotated_format":"graphml",#can't be gexf because of bug #1296 in networkx see https://github.com/networkx/networkx/issues/1296
 	# If your wos export file don't have this first line, it's not going to work!
 	"wos_headers":"PT	AU	BA	BE	GP	AF	BF	CA	TI	SO	SE	BS	LA	DT	CT	CY	CL	SP	HO	DE	ID	AB	C1	RP	EM	RI	OI	FU	FX	CR	NR	TC	Z9	PU	PI	PA	SN	EI	BN	J9	JI	PD	PY	VL	IS	PN	SU	SI	MA	BP	EP	AR	DI	D2	PG	WC	SC	GA	UT	PM",
+
 
 }
 
