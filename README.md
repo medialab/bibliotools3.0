@@ -35,7 +35,7 @@ ADD DOCUMENTATION about the reports
 
 #### 3. generate REF-REF cooccurrence network
 ```bash
-$python filter_and_network.py
+$python filter_and_network_ref.py
 ```
 This script will filter references on occurences number and then generate the RE-REF network adding and edge whose weight is the number of articles co-citing those 2 references.
 The scripts filters edges on weight as defined in config.py.
