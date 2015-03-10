@@ -134,18 +134,23 @@ for span in sorted(CONFIG["spans"]):
 	add_annotations("countries",references_article_grouped,g)
 	del references_article_grouped
 	if CONFIG["report_verbose"] : print "have now %s nodes"%len(g.nodes())
+
+
+	if not os.path.exists(CONFIG["output_directory"]):
+	    os.mkdir(CONFIG["output_directory"])
+
 	if CONFIG["export_ref_annotated_format"] =="gexf":
 		if CONFIG["process_verbose"] : print "write gexf export"
-		networkx.write_gexf(g,os.path.join(CONFIG["parsed_data"],span,"%s_annotated.gexf"%span))
+		networkx.write_gexf(g,os.path.join(CONFIG["output_directory"],"%s_annotated.gexf"%span))
 	elif CONFIG["export_ref_annotated_format"] == "edgelist":
 		if CONFIG["process_verbose"] : print "write csv export"
-		networkx.write_weighted_edgelist(g,os.path.join(CONFIG["parsed_data"],span,"%s_annotated.csv"%span),delimiter="\t")
+		networkx.write_weighted_edgelist(g,os.path.join(CONFIG["output_directory"],"%s_annotated.csv"%span),delimiter="\t")
 	elif CONFIG["export_ref_annotated_format"] == "pajek":
 		if CONFIG["process_verbose"] : print "write pajek export"
-		networkx.write_pajek(g,os.path.join(CONFIG["parsed_data"],span,"%s_annotated.net"%span))
+		networkx.write_pajek(g,os.path.join(CONFIG["output_directory"],"%s_annotated.net"%span))
 	elif CONFIG["export_ref_annotated_format"] == "graphml":
 		if CONFIG["process_verbose"] : print "write pajek export"
-		networkx.write_graphml(g,os.path.join(CONFIG["parsed_data"],span,"%s_annotated.graphml"%span))
+		networkx.write_graphml(g,os.path.join(CONFIG["output_directory"],"%s_annotated.graphml"%span))
 	else:
 		print  "no compatible export format specified"
 

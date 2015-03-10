@@ -37,7 +37,9 @@ CONFIG={
 				"institutions":{"occ":2,"weight":8},
 				"keywords":{"occ":2,"weight":11},
 				"countries":{"occ":2,"weight":3},
-			}
+			},
+	#output directory
+	"output_directory":"path_to_directory"
 	},
 
 	#step three mandatory
