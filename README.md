@@ -43,12 +43,13 @@ The script will output one network file "span-name.gexf" by time-span in format 
 
 #### 4. add items nodes and edges
 ```bash
-$python add_annotations_to_ref_network.py
+$python annotations_multiproc.py
 ```
 This script will add items nodes and edges between ref and items.
 It will filters as previous steps on occurences and edge weight.
 
 This script outputs a report which can help defining the weight filtering.
+
 ADD DOCUMENTATION about this reports and how to use
 
 This script output one network "span-name_annotated.graphml" by time-span.
