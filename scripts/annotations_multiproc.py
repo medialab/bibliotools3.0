@@ -188,9 +188,9 @@ spans_to_process=sorted(CONFIG["spans"],reverse=True)
 if CONFIG["report_csv"]:
     if os.path.exists(os.path.join(CONFIG["reports_directory"],"filtering_report.csv")):
         os.remove(os.path.join(CONFIG["reports_directory"],"filtering_report.csv"))
-    line=["span","nb articles","nb ref","f_ref","nb_ref_filtered","ratio_prev_ref"]
+    line=["span","nb articles","nb ref","f_ref occ|weight","nb_ref_filtered","ratio_prev_ref"]
     for items in ["subjects","authors","institutions","keywords","countries"]:
-            line+=["f %s"%items,"nb %s"%items,"p %s"%items]
+            line+=["f %s occ|weight"%items,"nb %s"%items]
     csv_export=[]
     csv_export.append(",".join(line))
     write_to_csv(csv_export)
@@ -239,10 +239,9 @@ while len(spans_to_process)>0 or len(span_procs)>0:
         line.append(nb_ref_filtered)
         line.append("%04.1f"%(float(nb_reference_before_filtering)/int(csv_export[-1].split(",")[2])) if len(csv_export)>1 else "")
         for items in ["subjects","authors","institutions","keywords","countries"]:
-            f=CONFIG["spans"][span][items]["weight"]
+            f="%s | %s"%(CONFIG["spans"][span][items]["occ"],CONFIG["spans"][span][items]["weight"])
             nb=s["%s_occ_filtered"%items]
-            p="%04.1f | %04.1f"%(float(nb)/nb_reference_before_filtering*1000,float(nb)/s['nb_articles']*1000)
-            line+=[f,nb,p]
+            line+=[f,nb]
         csv_export.append(",".join(str(_) for _ in line))
         write_to_csv(csv_export)
 
