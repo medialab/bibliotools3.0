@@ -39,8 +39,12 @@ def Wos_parser(in_dir,out_dir,verbose):
   f_articles = open(dst1,'w')
   dst2  = os.path.join(out_dir, "authors.dat")
   f_authors = open(dst2,'w')
-  dst3  = os.path.join(out_dir, "keywords.dat")
-  f_keywords = open(dst3,'w')
+  dst31  = os.path.join(out_dir, "title_keywords.dat")
+  f_title_keywords = open(dst31,'w')
+  dst32  = os.path.join(out_dir, "article_keywords.dat")
+  f_article_keywords = open(dst32,'w')
+  dst33  = os.path.join(out_dir, "isi_keywords.dat")
+  f_isi_keywords = open(dst33,'w')
   dst4  = os.path.join(out_dir, "subjects.dat")
   f_subjects = open(dst4,'w')
   dst5  = os.path.join(out_dir, "references.dat")
@@ -99,11 +103,11 @@ def Wos_parser(in_dir,out_dir,verbose):
               if(article.DE != ""):
                   foo = article.DE.split('; ')
                   for f in foo:
-                      f_keywords.write("%d\tAK\t%s\n" % (id,f.upper()))
+                      f_article_keywords.write("%d\tAK\t%s\n" % (id,f.upper()))
               if(article.ID != ""):
                   foo = article.ID.split('; ')
                   for f in foo:
-                      f_keywords.write("%d\tIK\t%s\n" % (id,f.upper()))
+                      f_isi_keywords.write("%d\tIK\t%s\n" % (id,f.upper()))
               if(article.TI != ""):
                   foo = article.TI
                   #... remove ponctuations !"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~
@@ -112,7 +116,7 @@ def Wos_parser(in_dir,out_dir,verbose):
                   for f in foo:
                     bar = f.lower()
                     if bar not in common_words and len(bar)>0:
-                      f_keywords.write("%d\tTK\t%s\n" % (id, bar.upper()))
+                      f_title_keywords.write("%d\tTK\t%s\n" % (id, bar.upper()))
               #subjects
               if(article.WC != ""):
                   foo = article.WC.split('; ')
@@ -159,7 +163,9 @@ def Wos_parser(in_dir,out_dir,verbose):
 
   f_articles.close()
   f_authors.close()
-  f_keywords.close()
+  f_article_keywords.close()
+  f_title_keywords.close()
+  f_isi_keywords.close()
   f_subjects.close()
   f_refs.close()
   f_countries.close()
