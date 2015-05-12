@@ -54,7 +54,7 @@ def add_annotations(items_name,references_article_grouped,g,log):
         if len(items_filtered)>0:
 
             for s,w in items_filtered:
-                g.add_node(s,label=s,type=items_name,occurence_count=items_occs[s])
+                g.add_node(s,label=s,type=items_name,occurence_count=items_occs[s],r=CONFIG["network_colours"][items_name]["r"],g=CONFIG["network_colours"][items_name]["g"],b=CONFIG["network_colours"][items_name]["b"])
                 add_edge_weight(g,r,s,w)
         del items_filtered
 

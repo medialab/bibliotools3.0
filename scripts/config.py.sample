@@ -49,6 +49,15 @@ CONFIG={
 	#step three mandatory
 	# network formats should be choosen in networkx format list
 	"export_ref_format":"gexf",
+	"network_colours":{
+				"subjects":{"r":225,"g":140,"b":0},
+				"authors":{"r":255,"g":215,"b":0},
+				"institutions":{"r":107,"g":142,"b":35},
+				"article_keywords":{"r":255,"g":105,"b":180},
+				"title_keywords":{"r":225,"g":0,"b":0},
+				"isi_keywords":{"r":0,"g":255,"b":0},
+				"countries":{"r":176,"g":224,"b":230}
+				},
 
 	# verbose
 	"process_verbose":False,
