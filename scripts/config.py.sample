@@ -26,7 +26,9 @@ CONFIG={
 				"subjects":{"occ":0,"weight":1},
 				"authors":{"occ":0,"weight":1},
 				"institutions":{"occ":0,"weight":1},
-				"keywords":{"occ":0,"weight":1},
+				"article_keywords":{"occ":0,"weight":1},
+				"title_keywords":{"occ":0,"weight":1},
+				"isi_keywords":{"occ":0,"weight":1},
 				"countries":{"occ":0,"weight":1},
 			},
 			"span_name_2":{
@@ -35,7 +37,9 @@ CONFIG={
 				"subjects":{"occ":0,"weight":2},
 				"authors":{"occ":2,"weight":10},
 				"institutions":{"occ":2,"weight":8},
-				"keywords":{"occ":2,"weight":11},
+				"article_keywords":{"occ":0,"weight":1},
+				"title_keywords":{"occ":0,"weight":1},
+				"isi_keywords":{"occ":0,"weight":1},
 				"countries":{"occ":2,"weight":3},
 			},
 	#output directory

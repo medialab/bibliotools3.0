@@ -130,7 +130,9 @@ def process_span(span,span_done,log_messages):
     span_info["subjects_occ_filtered"]=add_annotations("subjects",references_article_grouped,g,log)
     span_info["authors_occ_filtered"]=add_annotations("authors",references_article_grouped,g,log)
     span_info["institutions_occ_filtered"]=add_annotations("institutions",references_article_grouped,g,log)
-    span_info["keywords_occ_filtered"]=add_annotations("keywords",references_article_grouped,g,log)
+    span_info["article_keywords_occ_filtered"]=add_annotations("article_keywords",references_article_grouped,g,log)
+    span_info["title_keywords_occ_filtered"]=add_annotations("title_keywords",references_article_grouped,g,log)
+    span_info["isi_keywords_occ_filtered"]=add_annotations("isi_keywords",references_article_grouped,g,log)
     span_info["countries_occ_filtered"]=add_annotations("countries",references_article_grouped,g,log)
     
     del references_article_grouped
@@ -189,7 +191,7 @@ if CONFIG["report_csv"]:
     if os.path.exists(os.path.join(CONFIG["reports_directory"],"filtering_report.csv")):
         os.remove(os.path.join(CONFIG["reports_directory"],"filtering_report.csv"))
     line=["span","nb articles","nb ref","f_ref occ|weight","nb_ref_filtered","ratio_prev_ref"]
-    for items in ["subjects","authors","institutions","keywords","countries"]:
+    for items in ["subjects","authors","institutions","article_keywords","title_keywords","isi_keywords","countries"]:
             line+=["f %s occ|weight"%items,"nb %s"%items]
     csv_export=[]
     csv_export.append(",".join(line))
@@ -238,7 +240,7 @@ while len(spans_to_process)>0 or len(span_procs)>0:
         nb_ref_filtered=s["references_occ_filtered"]
         line.append(nb_ref_filtered)
         line.append("%04.1f"%(float(nb_reference_before_filtering)/int(csv_export[-1].split(",")[2])) if len(csv_export)>1 else "")
-        for items in ["subjects","authors","institutions","keywords","countries"]:
+        for items in ["subjects","authors","institutions","article_keywords","title_keywords","isi_keywords","countries"]:
             f="%s | %s"%(CONFIG["spans"][span][items]["occ"],CONFIG["spans"][span][items]["weight"])
             nb=s["%s_occ_filtered"%items]
             line+=[f,nb]
