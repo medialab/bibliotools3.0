@@ -18,7 +18,7 @@ def add_edge_weight(graph, node1, node2,weight=1):
     else:
         graph.add_edge(node1, node2, weight=weight)
 
-def add_annotations(items_name,references_article_grouped,g,log):
+def add_annotations(span,items_name,references_article_grouped,g,log):
     nb_nodes_before=len(g.nodes())
     # add item category
     with codecs.open(os.path.join(CONFIG["parsed_data"],span,"%s.dat"%items_name),"r",encoding="UTF-8") as items_file:
@@ -127,13 +127,13 @@ def process_span(span,span_done,log_messages):
     # print references_article_grouped
     log("imported, filtered and grouped references by articles")
 
-    span_info["subjects_occ_filtered"]=add_annotations("subjects",references_article_grouped,g,log)
-    span_info["authors_occ_filtered"]=add_annotations("authors",references_article_grouped,g,log)
-    span_info["institutions_occ_filtered"]=add_annotations("institutions",references_article_grouped,g,log)
-    span_info["article_keywords_occ_filtered"]=add_annotations("article_keywords",references_article_grouped,g,log)
-    span_info["title_keywords_occ_filtered"]=add_annotations("title_keywords",references_article_grouped,g,log)
-    span_info["isi_keywords_occ_filtered"]=add_annotations("isi_keywords",references_article_grouped,g,log)
-    span_info["countries_occ_filtered"]=add_annotations("countries",references_article_grouped,g,log)
+    span_info["subjects_occ_filtered"]=add_annotations(span,"subjects",references_article_grouped,g,log)
+    span_info["authors_occ_filtered"]=add_annotations(span,"authors",references_article_grouped,g,log)
+    span_info["institutions_occ_filtered"]=add_annotations(span,"institutions",references_article_grouped,g,log)
+    span_info["article_keywords_occ_filtered"]=add_annotations(span,"article_keywords",references_article_grouped,g,log)
+    span_info["title_keywords_occ_filtered"]=add_annotations(span,"title_keywords",references_article_grouped,g,log)
+    span_info["isi_keywords_occ_filtered"]=add_annotations(span,"isi_keywords",references_article_grouped,g,log)
+    span_info["countries_occ_filtered"]=add_annotations(span,"countries",references_article_grouped,g,log)
     
     del references_article_grouped
     
