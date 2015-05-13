@@ -186,16 +186,7 @@ log_messages = JoinableQueue()
 
 spans_to_process=sorted(CONFIG["spans"],reverse=True)
 
-# prepare csv report
-if CONFIG["report_csv"]:
-    if os.path.exists(os.path.join(CONFIG["reports_directory"],"filtering_report.csv")):
-        os.remove(os.path.join(CONFIG["reports_directory"],"filtering_report.csv"))
-    line=["span","nb articles","nb ref","f_ref occ|weight","nb_ref_filtered","ratio_prev_ref"]
-    for items in ["subjects","authors","institutions","article_keywords","title_keywords","isi_keywords","countries"]:
-            line+=["f %s occ|weight"%items,"nb %s"%items]
-    csv_export=[]
-    csv_export.append(",".join(line))
-    write_to_csv(csv_export)
+
 
 # create the logger process
 log_filename="annotated_network_processing.log"
@@ -214,9 +205,20 @@ for _ in range(min(CONFIG["nb_processes"],len(spans_to_process))):
     p.start()
     span_procs[span]=p
 
+if CONFIG["report_csv"]:
+    # prepare csv report
+    # if os.path.exists(os.path.join(CONFIG["reports_directory"],"filtering_report.csv")):
+    #     os.remove(os.path.join(CONFIG["reports_directory"],"filtering_report.csv"))
+    line=["span","nb articles","nb ref","f_ref occ|weight","nb_ref_filtered"]#"ratio_prev_ref"]
+    for items in ["subjects","authors","institutions","article_keywords","title_keywords","isi_keywords","countries"]:
+            line+=["f %s"%items,"nb %s"%items]
+    csv_export=[]
+    csv_export.append(",".join(line))
+    write_to_csv(csv_export)
 
 while len(spans_to_process)>0 or len(span_procs)>0:
     s=span_done.get()
+    span=s["span"]
     span_procs[s["span"]].join()
     log_messages.put("%s done"%s['span'])
     del span_procs[s["span"]]
@@ -239,7 +241,7 @@ while len(spans_to_process)>0 or len(span_procs)>0:
         line.append("%s | %s"%(CONFIG["spans"][span]["references"]["occ"],CONFIG["spans"][span]["references"]["weight"]))
         nb_ref_filtered=s["references_occ_filtered"]
         line.append(nb_ref_filtered)
-        line.append("%04.1f"%(float(nb_reference_before_filtering)/int(csv_export[-1].split(",")[2])) if len(csv_export)>1 else "")
+        #line.append("%04.1f"%(float(nb_reference_before_filtering)/int(csv_export[-1].split(",")[2])) if len(csv_export)>1 else "")
         for items in ["subjects","authors","institutions","article_keywords","title_keywords","isi_keywords","countries"]:
             f="%s | %s"%(CONFIG["spans"][span][items]["occ"],CONFIG["spans"][span][items]["weight"])
             nb=s["%s_occ_filtered"%items]
