@@ -30,7 +30,11 @@ Items are : references, subjects, authors, institutions, keywords, countries.
 This steps uses parser.py and Utils.py from bibliotools 2. You'll find in this repository a better version of parser.py  and Utils.py in which I removed [one important bug](https://github.com/medialab/bibliotools3.0/commit/38bd140af4f0246930e730a47ad3ef5027c63b3c).
 
 #### 2-3. Define filtering
-One can use the script corpus_parsed_overview.py to outputs many reports about the corpus.
+```bash
+$python corpus_parsed_overview.py
+```
+Which will output many reports about the corpus.
+
 ADD DOCUMENTATION about the reports
 
 #### 3. generate REF-REF cooccurrence network
