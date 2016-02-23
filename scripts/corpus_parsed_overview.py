@@ -47,7 +47,9 @@ for span in CONFIG["spans"]:
 	print_statistics_of("authors.dat")
 	print_statistics_of("countries.dat")
 	print_statistics_of("institutions.dat")
-	print_statistics_of("keywords.dat")
+	print_statistics_of("isi_keywords.dat")
+	print_statistics_of("article_keywords.dat")
+	print_statistics_of("title_keywords.dat")
 	print_statistics_of("references.dat")
 	print_statistics_of("subjects.dat")
 

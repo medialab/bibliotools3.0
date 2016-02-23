@@ -41,10 +41,11 @@ CONFIG={
 				"title_keywords":{"occ":0,"weight":1},
 				"isi_keywords":{"occ":0,"weight":1},
 				"countries":{"occ":2,"weight":3},
-			},
-	#output directory
-	"output_directory":"path_to_directory"
+			}
+
 	},
+	#output directory
+	"output_directory":"path_to_directory",
 
 	#step three mandatory
 	# network formats should be choosen in networkx format list
