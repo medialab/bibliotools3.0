@@ -35,6 +35,9 @@ $python corpus_parsed_overview.py
 ```
 Which will output many reports about the corpus.
 
+Open "name"_references_distribution.csv in the folder reports
+Check the number of occurrence (first column) when the cumulative % of reference (third column) becomes significantly higher 
+--> This gives you an idea of the minimum number of occurrence to filter your data in order to get a readable graph
 ADD DOCUMENTATION about the reports
 
 #### 3. generate REF-REF cooccurrence network
