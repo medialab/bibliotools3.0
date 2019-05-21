@@ -1,4 +1,4 @@
 argparse
 numpy
 #matplotlib
-networkx
+networkx==1.11
