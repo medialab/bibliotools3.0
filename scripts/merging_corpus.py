@@ -29,7 +29,7 @@ for root, subFolders, files in os.walk(CONFIG["wos_data"]):
         print "merging %s"%filepath
         with open(filepath,"r") as f:
             # remove first line containing headers
-            lines=f.read().split("\n")[1:]
+            lines=f.read().split("\r")[1:]
 
             #and remove last character if trailing tab
             lines = [l.strip(" ") for l in lines]
@@ -68,7 +68,7 @@ for line in onefile_output.readlines():
     # filter blank lines
     if "\t" in line:
         # get year
-        y=line.split("\t")[42]
+        y=line.split("\t")[44]
         # increment
         years_spans[y]=years_spans[y]+1 if y in years_spans else 1
 

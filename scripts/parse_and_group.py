@@ -29,9 +29,10 @@ for line in onefile_output.readlines():
 	# filter blank lines
 	if "\t" in line:
 		try:
-			y=int(line.split("\t")[42])
+			year_in_PY=line.split("\t")[44]
+			y=int(year_in_PY) if year_in_PY != "" else ""
 			for (l,ys) in years_spans.iteritems():
-				if y >= ys[0] and y<= ys[1]:
+				if y!= '' and y >= ys[0] and y<= ys[1]:
 					files[l].write(line)
 		
 		except Exception as e:
